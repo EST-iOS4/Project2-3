@@ -69,4 +69,6 @@ fastlane/test_output
 #           - AS PER https://guides.cocoapods.org/using/using-cocoapods.html NEVER IGNORE THE LOCK FILE
 Pods/
 
-# End of https://www.toptal.com/developers/gitignore/api/cocoapods
+# End of https://www.toptal.com/developers/gitignore/api/cocoapods.DS_Store
+.DS_Store
+**/.DS_Store
