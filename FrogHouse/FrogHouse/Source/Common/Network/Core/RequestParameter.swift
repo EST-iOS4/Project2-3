@@ -6,3 +6,9 @@
 //
 
 import Foundation
+
+enum RequestParameter {
+    case query([String: Any])
+    case body([String: Any])
+    case none
+}
