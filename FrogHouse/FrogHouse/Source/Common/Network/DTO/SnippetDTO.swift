@@ -11,5 +11,5 @@ struct SnippetDTO: Decodable {
     let title: String
     let description: String
     let thumbnails: ThumbnailsDTO
-    let tags: [String]
+    let tags: [String]?
 }
