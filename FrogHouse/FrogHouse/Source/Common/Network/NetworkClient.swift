@@ -35,6 +35,9 @@ final class NetworkClient: NetworkClientProtocol {
                 }
                 
                 guard (200..<300).contains(httpResponse.statusCode) else {
+                    if (400..<500).contains(httpResponse.statusCode) {
+                        completion(.failure(NetworkError.clientError(statusCode: httpResponse.statusCode)))
+                    }
                     completion(.failure(NetworkError.serverError(statusCode: httpResponse.statusCode)))
                     return
                 }
