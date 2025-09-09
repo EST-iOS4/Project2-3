@@ -8,52 +8,68 @@
 import Foundation
 
 final class VideoListViewModel {
-
-    struct Item {
+    struct Item: Hashable {
         let id = UUID()
         let title: String
         let description: String
+        let thumbnailImageURL: URL?
         var isLiked: Bool
+        let categories: [VideoCategory]
     }
-
-    private var allItems: [Item] = (1...40).map { i in
-        Item(title: "제목 \(i)",
-             description: "안녕하세요 반갑습니다.안녕하세요 반갑습니다.안녕하세요 반갑습니다.안녕하세요 반갑습니다.안녕하세요 반갑습니다.안녕하세요 반갑습니다.",
-             isLiked: false)
-    }
-
-    private(set) var visibleItems: [Item] = []
-
-    private let pageSize = 10
+    
     private var isLoading = false
-
-    func loadInitial() {
-        visibleItems = Array(allItems.prefix(pageSize))
+    @Published private(set) var videoList: [Item] = []
+    @Published private(set) var categories: [VideoCategory] = VideoCategory.allCases
+    @Published private(set) var selectedCategoryIndex: Int = 0
+    
+    func selectCategory(at index: Int) {
+        selectedCategoryIndex = index
+        fetchVideoList()
     }
-
-    func loadMoreIfNeeded() -> Bool {
-        guard !isLoading else { return false }
-        let nextIndex = visibleItems.count
-        guard nextIndex < allItems.count else { return false }
-
-        isLoading = true
-        let newIndex = min(nextIndex + pageSize, allItems.count)
-        visibleItems.append(contentsOf: allItems[nextIndex..<newIndex])
-        isLoading = false
-        return true
-    }
-
-    func numberOfRows() -> Int { visibleItems.count }
-
-    func item(at index: Int) -> Item { visibleItems[index] }
-
-    func toggleLike(at index: Int) {
-        guard index >= 0 && index < visibleItems.count else { return }
-        visibleItems[index].isLiked.toggle()
-
-        let id = visibleItems[index].id
-        if let allIdx = allItems.firstIndex(where: { $0.id == id }) {
-            allItems[allIdx].isLiked = visibleItems[index].isLiked
+    
+    func fetchVideoList() {
+        let allVideoList: [Item] = [
+            .init(
+                title: "iOS Combine Tutorial",
+                description: "Learn how to use Combine framework in your iOS apps.",
+                thumbnailImageURL: URL(string: "https://picsum.photos/200/300"),
+                isLiked: true,
+                categories: [.music]
+            ),
+            .init(
+                title: "Swift Concurrency Basics",
+                description: "Understand async/await and structured concurrency in Swift.",
+                thumbnailImageURL: URL(string: "https://picsum.photos/200/301"),
+                isLiked: false,
+                categories: [.music]
+            ),
+            .init(
+                title: "AVFoundation Deep Dive",
+                description: "Explore video playback, editing, and exporting with AVFoundation.",
+                thumbnailImageURL: URL(string: "https://picsum.photos/200/302"),
+                isLiked: true,
+                categories: [.sports]
+            ),
+            .init(
+                title: "UI Design Principles",
+                description: "Best practices for creating intuitive and beautiful UIs.",
+                thumbnailImageURL: URL(string: "https://picsum.photos/200/303"),
+                isLiked: false,
+                categories: [.gaming]
+            )
+        ]
+        
+        let selectedCategory = categories[selectedCategoryIndex]
+        
+        if selectedCategory == .all {
+            videoList = allVideoList
+        } else {
+            videoList = allVideoList.filter { $0.categories.contains(selectedCategory) }
         }
+    }
+    
+    func toggleLike(at index: Int) {
+        guard 0..<videoList.count ~= index else { return }
+        videoList[index].isLiked.toggle()
     }
 }

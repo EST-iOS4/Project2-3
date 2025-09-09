@@ -8,90 +8,158 @@
 import UIKit
 
 final class VideoListViewController: BaseViewController<VideoListViewModel> {
+    enum Section: Int, Hashable {
+        case main
+    }
+    private var dataSource: UICollectionViewDiffableDataSource<Section, VideoListViewModel.Item>!
     
-    private let tableView = UITableView(frame: .zero, style: .plain)
+    private let scrollView: UIScrollView = {
+        let scrollView = UIScrollView()
+        scrollView.backgroundColor = .clear
+        scrollView.showsVerticalScrollIndicator = false
+        scrollView.alwaysBounceVertical = true
+        return scrollView
+    }()
     
+    private let containerStackView: UIStackView = {
+        let stackView = UIStackView()
+        stackView.axis = .vertical
+        stackView.backgroundColor = .clear
+        stackView.distribution = .fill
+        stackView.isLayoutMarginsRelativeArrangement = true
+        stackView.layoutMargins = .init(top: 8, left: 8, bottom: 8, right: 8)
+        stackView.spacing = 10
+        return stackView
+    }()
+    
+    private let categorySegmentedControl = UISegmentedControl()
+    private let emptyView = EmptyView(state: .noVideo)
+    
+    private lazy var videoCollectionView: AutoSizingCollectionView = {
+        let layout = UICollectionViewFlowLayout()
+        layout.scrollDirection = .vertical
+        layout.minimumLineSpacing = 8
+        
+        let collectionView = AutoSizingCollectionView(frame: .zero, collectionViewLayout: layout)
+        collectionView.backgroundColor = .systemBackground // TODO: 송지석 (색상 추후 교체)
+        collectionView.delegate = self
+        collectionView.register(VideoCell.self, forCellWithReuseIdentifier: VideoCell.reuseIdentifier)
+        return collectionView
+    }()
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        viewModel.fetchVideoList()
+    }
     
     override func setupUI() {
         super.setupUI()
-        
-        
-        view.backgroundColor = .systemBackground // TODO : 송지석 (색상 추후 교체)
         title = "상세리스트화면"
-        
-        tableView.rowHeight = UITableView.automaticDimension
-        tableView.estimatedRowHeight = 120
-        tableView.separatorStyle = .singleLine
-        tableView.backgroundColor = .systemBackground // TODO : 송지석 (색상 추후 교체)
-        tableView.dataSource = self
-        tableView.delegate   = self
-        
-        tableView.register(VideoCell.self, forCellReuseIdentifier: VideoCell.reuseIdentifier)
     }
     
     override func setupLayouts() {
-        view.addSubview(tableView)
+        view.addSubview(scrollView)
+        view.addSubview(emptyView)
+        scrollView.addSubview(containerStackView)
+        [categorySegmentedControl, videoCollectionView].forEach { containerStackView.addArrangedSubview($0) }
     }
     
     override func setupConstraints() {
-        tableView.pinToSuperview()
+        scrollView.pinToSuperview()
+            .anchor.width(view.widthAnchor)
+        
+        containerStackView.anchor
+            .top(scrollView.topAnchor)
+            .leading(scrollView.leadingAnchor)
+            .trailing(scrollView.trailingAnchor)
+            .bottom(scrollView.bottomAnchor)
+            .width(view.widthAnchor)
+        
+        emptyView.anchor
+            .top(categorySegmentedControl.bottomAnchor)
+            .leading(view.leadingAnchor)
+            .trailing(view.trailingAnchor)
+            .bottom(view.safeAreaLayoutGuide.bottomAnchor)
+        
+        categorySegmentedControl.anchor.height(40)
     }
     
     override func bind() {
-        viewModel.loadInitial()
-        tableView.reloadData()
+        setupDataSource()
+        
+        viewModel.$videoList
+            .receive(on: RunLoop.main)
+            .sink { [weak self] videoItems in
+                self?.emptyView.isHidden = !videoItems.isEmpty
+                self?.applySnapshot(videoItems: videoItems)
+            }
+            .store(in: &cancellables)
+        
+        viewModel.$categories
+            .receive(on: RunLoop.main)
+            .sink { [weak self] categories in
+                self?.configureSegmentedControl(with: categories.map { $0.title })
+            }
+            .store(in: &cancellables)
+        
+        categorySegmentedControl.addTarget(
+            self,
+            action: #selector(categoryChanged),
+            for: .valueChanged
+        )
     }
     
-    private func loadMoreIfNeeded() {
-        if viewModel.loadMoreIfNeeded() {
-            tableView.reloadData()
+    private func configureSegmentedControl(with categories: [String]) {
+        categorySegmentedControl.removeAllSegments()
+        for (index, category) in categories.enumerated() {
+            categorySegmentedControl.insertSegment(withTitle: category, at: index, animated: false)
         }
+        categorySegmentedControl.selectedSegmentIndex = viewModel.selectedCategoryIndex
+    }
+    
+    @objc
+    private func categoryChanged(_ sender: UISegmentedControl) {
+        viewModel.selectCategory(at: sender.selectedSegmentIndex)
     }
 }
 
-extension VideoListViewController: UITableViewDataSource, UITableViewDelegate {
-    
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        viewModel.numberOfRows()
-    }
-    
-    func tableView(_ tableView: UITableView,
-                   cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        guard let cell = tableView.dequeueReusableCell(
-            withIdentifier: VideoCell.reuseIdentifier,
-            for: indexPath
-        ) as? VideoCell else { return UITableViewCell() }
-        
-        let item = viewModel.item(at: indexPath.row)
-        cell.configure(title: item.title, desc: item.description, liked: item.isLiked)
-        
-        cell.onLikeTapped = { [weak self] in
-            guard let self else { return }
-            self.viewModel.toggleLike(at: indexPath.row)
-            let newItem = self.viewModel.item(at: indexPath.row)
-            cell.setLiked(newItem.isLiked, animated: true)
-        }
-        
-        return cell
-    }
-    
-    func tableView(_ tableView: UITableView,
-                   willDisplay cell: UITableViewCell,
-                   forRowAt indexPath: IndexPath) {
-        let total = viewModel.numberOfRows()
-        guard total >= 3 else { return }
-        if indexPath.row == total - 3 {
-            loadMoreIfNeeded()
+// MARK: - Setup DataSource
+extension VideoListViewController {
+    private func setupDataSource() {
+        dataSource = UICollectionViewDiffableDataSource<Section, VideoListViewModel.Item>(collectionView: videoCollectionView) { collectionView, indexPath, videoItem in
+            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: VideoCell.reuseIdentifier, for: indexPath) as? VideoCell ?? VideoCell()
+            cell.configure(
+                title: videoItem.title,
+                description: videoItem.description,
+                isLiked: videoItem.isLiked,
+                thumbnailImageURL: nil
+            )
+            
+            cell.onLikeTapped = { [weak self] in
+                guard let self else { return }
+                self.viewModel.toggleLike(at: indexPath.row)
+            }
+            return cell
         }
     }
-        
-    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        tableView.deselectRow(at: indexPath, animated: true)
-        
-        let it = viewModel.item(at: indexPath.row)
-        print("선택된 셀 index=\(indexPath.row)")
-        print("제목: \(it.title)")
-        print("설명: \(it.description)")
-        
+    
+    func applySnapshot(videoItems: [VideoListViewModel.Item]) {
+        var snapshot = NSDiffableDataSourceSnapshot<Section, VideoListViewModel.Item>()
+        snapshot.appendSections([.main])
+        snapshot.appendItems(videoItems)
+        dataSource.apply(snapshot, animatingDifferences: true)
+    }
+}
+
+// MARK: - UICollectionViewDelegateFlowLayout
+extension VideoListViewController: UICollectionViewDelegateFlowLayout {
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        guard let item = dataSource.itemIdentifier(for: indexPath) else { return }
+        let vc = VideoDetailViewController(viewModel: VideoDetailViewModel(videoURL: item.thumbnailImageURL))
+        navigationController?.pushViewController(vc, animated: true)
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        return CGSize(width: collectionView.bounds.width, height: 120)
     }
 }

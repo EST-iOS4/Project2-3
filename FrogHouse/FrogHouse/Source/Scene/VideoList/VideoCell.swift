@@ -7,47 +7,64 @@
 
 import UIKit
 
-final class VideoCell: UITableViewCell {
-    static let reuseIdentifier = String(describing: VideoCell.self)
+import Kingfisher
 
+final class VideoCell: UICollectionViewCell {
+    static let reuseIdentifier = String(describing: VideoCell.self)
+    
     var onLikeTapped: (() -> Void)?
     
-    private let thumbnailImageView = UIImageView()
-    private let titleLabel = UILabel()
-    private let descriptionLabel = UILabel()
-    private let likeButton = UIButton(type: .system)
+    private let thumbnailImageView: UIImageView = {
+        let imageView = UIImageView()
+        imageView.contentMode = .scaleAspectFill
+        imageView.clipsToBounds = true
+        imageView.layer.cornerRadius = 8
+        imageView.backgroundColor = .tertiarySystemFill // TODO: 송지석 (색상 추후 교체)
+        imageView.image = UIImage(systemName: "video")
+        return imageView
+    }()
     
-    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
-            super.init(style: style, reuseIdentifier: reuseIdentifier)
-            selectionStyle = .none
-        
-            setupUI()
-            setupConstraints()
+    private let titleLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.FH.title(size: 20)
+        label.textColor = .label // TODO: 송지석 (색상 추후 교체)
+        label.numberOfLines = 1
+        label.lineBreakMode = .byTruncatingTail
+        return label
+    }()
+    
+    private let descriptionLabel: UILabel = {
+        let label = UILabel()
+        label.font = UIFont.FH.body(size: 15)
+        label.textColor = .secondaryLabel // TODO: 송지석 (색상 추후 교체)
+        label.numberOfLines = 2
+        label.lineBreakMode = .byTruncatingTail
+        return label
+    }()
+    
+    private let likeButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.addTarget(self, action: #selector(didTapLike), for: .touchUpInside)
+        button.setContentCompressionResistancePriority(.required, for: .horizontal)
+        return button
+    }()
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        setupUI()
+        setupConstraints()
     }
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
     
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        titleLabel.text = nil
+        descriptionLabel.text = nil
+        likeButton.setImage(nil, for: .normal)
+    }
+    
     private func setupUI() {
-        thumbnailImageView.contentMode = .scaleAspectFill
-        thumbnailImageView.clipsToBounds = true
-        thumbnailImageView.layer.cornerRadius = 8
-        thumbnailImageView.backgroundColor = .tertiarySystemFill     // TODO : 송지석 (색상 추후 교체)
-        thumbnailImageView.image = UIImage(systemName: "video")
-        
-        titleLabel.font = UIFont.FH.title(size: 20)
-        titleLabel.textColor = .label   // TODO : 송지석 (색상 추후 교체)
-        titleLabel.numberOfLines = 2
-        titleLabel.lineBreakMode = .byTruncatingTail
-        
-        descriptionLabel.font = UIFont.FH.body(size: 15)
-        descriptionLabel.textColor = .secondaryLabel    // TODO : 송지석 (색상 추후 교체)
-        descriptionLabel.numberOfLines = 2
-        descriptionLabel.lineBreakMode = .byTruncatingTail
-        
-        let heart = UIImage.SymbolConfiguration(pointSize: 18, weight: .regular, scale: .medium)
-        likeButton.setPreferredSymbolConfiguration(heart, forImageIn: .normal)
-        likeButton.addTarget(self, action: #selector(didTapLike), for: .touchUpInside)
-        
-        // TODO : 송지석 (색상 추후 교체)
+        // TODO: 송지석 (색상 추후 교체)
         backgroundColor = .clear
         contentView.backgroundColor = .clear
         
@@ -55,57 +72,50 @@ final class VideoCell: UITableViewCell {
     }
     
     private func setupConstraints() {
-        let guide = contentView.layoutMarginsGuide
-        let spacing: CGFloat = 8
-        
-        titleLabel.numberOfLines = 2
-        titleLabel.lineBreakMode = .byTruncatingTail
-
-        descriptionLabel.numberOfLines = 2
-        descriptionLabel.lineBreakMode = .byTruncatingTail
-        
         thumbnailImageView.anchor
-            .leading(guide.leadingAnchor)
-            .centerY(guide.centerYAnchor)
-            .size(width: 120, height: 80)
-
+            .top(contentView.topAnchor)
+            .leading(contentView.leadingAnchor)
+            .bottom(contentView.bottomAnchor)
+            .width(120)
+        
         likeButton.anchor
-            .top(guide.topAnchor)
-            .trailing(guide.trailingAnchor)
+            .top(contentView.topAnchor)
+            .trailing(contentView.trailingAnchor)
             .size(width: 24, height: 24)
         
         titleLabel.anchor
-            .top(guide.topAnchor)
+            .top(contentView.topAnchor)
             .leading(thumbnailImageView.trailingAnchor, offset: 12)
             .trailing(likeButton.leadingAnchor, offset: 8)
         
         descriptionLabel.anchor
-            .top(titleLabel.bottomAnchor, offset: spacing)
+            .top(titleLabel.bottomAnchor, offset: 8)
             .leading(titleLabel.leadingAnchor)
-            .trailing(guide.trailingAnchor)
-            .bottom(guide.bottomAnchor)
-        
-        likeButton.setContentCompressionResistancePriority(.required, for: .horizontal)
+            .trailing(contentView.trailingAnchor)
     }
     
     @objc private func didTapLike() { onLikeTapped?() }
-    
-    func configure(title: String, desc: String, liked: Bool) {
+}
+
+// MARK: - Configure Cell
+extension VideoCell {
+    func configure(
+        title: String,
+        description: String,
+        isLiked: Bool,
+        thumbnailImageURL: URL?
+    ) {
         titleLabel.text = title
-        descriptionLabel.text  = desc
-        setLiked(liked, animated: false)
+        descriptionLabel.text = description
+        updateState(isLiked)
+        thumbnailImageView.kf.setImage(with: thumbnailImageURL)
     }
     
-    func setLiked(_ liked: Bool, animated: Bool = true) {
-        let img = UIImage(systemName: liked ? "heart.fill" : "heart")
-        if animated {
-            UIView.transition(with: likeButton, duration: 0.12, options: .transitionCrossDissolve) {
-                self.likeButton.setImage(img, for: .normal)
-                self.likeButton.tintColor = liked ? .systemRed : .label     // TODO : 송지석 (색상 추후 교체)
-            }
-        } else {
-            likeButton.setImage(img, for: .normal)
-            likeButton.tintColor = liked ? .systemRed : .label // TODO : 송지석 (색상 추후 교체)
-        }
+    func updateState(_ liked: Bool) {
+        let buttonImage = UIImage(systemName: liked ? "heart.fill" : "heart")
+        let buttonColor: UIColor = liked ? .systemRed : .label // TODO: - 송지석 (색상 추후 교체)
+
+        likeButton.setImage(buttonImage, for: .normal)
+        likeButton.tintColor = buttonColor
     }
 }
