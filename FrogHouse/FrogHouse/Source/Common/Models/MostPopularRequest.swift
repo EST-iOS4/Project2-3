@@ -14,14 +14,4 @@ struct MostPopularRequest: Encodable {
     let maxResults: Int
     let videoCategoryId: VideoCategory
     let key: String
-    
-    init(regionCode: RegionCode,
-         maxResults: Int,
-         videoCategoryId: VideoCategory,
-         key: String) {
-        self.regionCode = regionCode
-        self.maxResults = maxResults
-        self.videoCategoryId = videoCategoryId
-        self.key = key
-    }
 }
