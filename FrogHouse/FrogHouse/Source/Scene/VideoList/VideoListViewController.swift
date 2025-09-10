@@ -27,8 +27,8 @@ final class VideoListViewController: BaseViewController<VideoListViewModel> {
         stackView.backgroundColor = .clear
         stackView.distribution = .fill
         stackView.isLayoutMarginsRelativeArrangement = true
-        stackView.layoutMargins = .init(top: 8, left: 8, bottom: 8, right: 8)
-        stackView.spacing = 10
+        stackView.layoutMargins = .init(top: 8, left: 20, bottom: 8, right: 20)
+        stackView.spacing = 20
         return stackView
     }()
     
@@ -54,7 +54,7 @@ final class VideoListViewController: BaseViewController<VideoListViewModel> {
     
     override func setupUI() {
         super.setupUI()
-        title = "상세리스트화면"
+        title = "모든 콘텐츠"
     }
     
     override func setupLayouts() {
