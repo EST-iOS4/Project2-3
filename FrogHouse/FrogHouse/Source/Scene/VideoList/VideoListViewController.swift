@@ -52,6 +52,8 @@ final class VideoListViewController: BaseViewController<VideoListViewModel> {
         viewModel.fetchVideoList()
     }
     
+    private let refreshControl = UIRefreshControl()
+    
     override func setupUI() {
         super.setupUI()
         title = "모든 콘텐츠"
@@ -62,6 +64,10 @@ final class VideoListViewController: BaseViewController<VideoListViewModel> {
         view.addSubview(emptyView)
         scrollView.addSubview(containerStackView)
         [categorySegmentedControl, videoCollectionView].forEach { containerStackView.addArrangedSubview($0) }
+        
+        scrollView.refreshControl = refreshControl
+        refreshControl.addTarget(self, action: #selector(didPullToRefresh), for: .valueChanged)
+        
     }
     
     override func setupConstraints() {
@@ -92,6 +98,10 @@ final class VideoListViewController: BaseViewController<VideoListViewModel> {
             .sink { [weak self] videoItems in
                 self?.emptyView.isHidden = !videoItems.isEmpty
                 self?.applySnapshot(videoItems: videoItems)
+                
+                if self?.refreshControl.isRefreshing == true{
+                    self?.refreshControl.endRefreshing()
+                }
             }
             .store(in: &cancellables)
         
@@ -116,6 +126,10 @@ final class VideoListViewController: BaseViewController<VideoListViewModel> {
         }
         categorySegmentedControl.selectedSegmentIndex = viewModel.selectedCategoryIndex
     }
+    @objc private func didPullToRefresh() {
+        viewModel.fetchVideoList()
+    }
+    
     
     @objc
     private func categoryChanged(_ sender: UISegmentedControl) {
