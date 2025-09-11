@@ -28,7 +28,7 @@ final class CommonTabbarController: UITabBarController {
         
         let viewControllers: [UIViewController] = [
             NavigationController(rootViewController: VideoListViewController(viewModel: VideoListViewModel())),
-            NavigationController(rootViewController: RecommendedVideoViewController(viewModel: RecommendedViewModel())),
+            NavigationController(rootViewController: RecommendedVideoViewController(viewModel: RecommendedVideoViewModel.makeMockData())),
             NavigationController(rootViewController: MyVideoViewController(viewModel: MyVideoViewModel()))
         ]
         
