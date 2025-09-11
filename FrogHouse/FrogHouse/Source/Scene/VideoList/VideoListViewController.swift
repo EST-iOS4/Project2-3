@@ -32,7 +32,6 @@ final class VideoListViewController: BaseViewController<VideoListViewModel> {
         return stackView
     }()
     
-    private let categorySegmentedControl = UISegmentedControl()
     private let emptyView = EmptyView(state: .noVideo)
     
     private lazy var videoCollectionView: AutoSizingCollectionView = {
@@ -66,7 +65,7 @@ final class VideoListViewController: BaseViewController<VideoListViewModel> {
     override func setupLayouts() {
         [scrollView, emptyView].forEach { view.addSubview($0) }
         scrollView.addSubview(containerStackView)
-        [categorySegmentedControl, videoCollectionView].forEach { containerStackView.addArrangedSubview($0) }
+        [videoCollectionView].forEach { containerStackView.addArrangedSubview($0) }
         
         scrollView.refreshControl = refreshControl
         refreshControl.addTarget(self, action: #selector(didPullToRefresh), for: .valueChanged)
@@ -85,12 +84,10 @@ final class VideoListViewController: BaseViewController<VideoListViewModel> {
             .width(view.widthAnchor)
         
         emptyView.anchor
-            .top(categorySegmentedControl.bottomAnchor)
+            .top(view.safeAreaLayoutGuide.bottomAnchor)
             .leading(view.leadingAnchor)
             .trailing(view.trailingAnchor)
             .bottom(view.safeAreaLayoutGuide.bottomAnchor)
-        
-        categorySegmentedControl.anchor.height(40)
     }
     
     override func bind() {
@@ -107,42 +104,12 @@ final class VideoListViewController: BaseViewController<VideoListViewModel> {
                 }
             }
             .store(in: &cancellables)
-        
-        viewModel.$categories
-            .receive(on: RunLoop.main)
-            .sink { [weak self] categories in
-                self?.configureSegmentedControl(with: categories.map { $0.title })
-            }
-            .store(in: &cancellables)
-        
-        categorySegmentedControl.addTarget(
-            self,
-            action: #selector(categoryChanged),
-            for: .valueChanged
-        )
     }
-    
-    private func configureSegmentedControl(with categories: [String]) {
-        categorySegmentedControl.removeAllSegments()
-        for (index, category) in categories.enumerated() {
-            categorySegmentedControl.insertSegment(withTitle: category, at: index, animated: false)
-        }
-        categorySegmentedControl.selectedSegmentIndex = viewModel.selectedCategoryIndex
-    }
-    
+
     @objc
     private func didPullToRefresh() {
         do {
             try viewModel.fetchVideoList()
-        } catch {
-            
-        }
-    }
-    
-    @objc
-    private func categoryChanged(_ sender: UISegmentedControl) {
-        do {
-            try viewModel.selectCategory(at: sender.selectedSegmentIndex)
         } catch {
             
         }
