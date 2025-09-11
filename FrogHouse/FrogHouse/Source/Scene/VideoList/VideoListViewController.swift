@@ -57,6 +57,8 @@ final class VideoListViewController: BaseViewController<VideoListViewModel> {
         title = "모든 콘텐츠"
         
         view.backgroundColor = UIColor.FH.backgroundBase.color
+        navigationController?.navigationBar.tintColor = UIColor.FH.signatureGreen.color
+
     }
     
     override func setupLayouts() {
