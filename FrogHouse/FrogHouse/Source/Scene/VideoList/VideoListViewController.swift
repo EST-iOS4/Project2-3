@@ -41,7 +41,7 @@ final class VideoListViewController: BaseViewController<VideoListViewModel> {
         layout.minimumLineSpacing = 8
         
         let collectionView = AutoSizingCollectionView(frame: .zero, collectionViewLayout: layout)
-        collectionView.backgroundColor = .systemBackground // TODO: 송지석 (색상 추후 교체)
+        collectionView.backgroundColor = UIColor.FH.backgroundBase.color // TODO: 송지석 (색상 추후 교체)
         collectionView.delegate = self
         collectionView.register(VideoCell.self, forCellWithReuseIdentifier: VideoCell.reuseIdentifier)
         return collectionView
@@ -57,6 +57,10 @@ final class VideoListViewController: BaseViewController<VideoListViewModel> {
     override func setupUI() {
         super.setupUI()
         title = "모든 콘텐츠"
+        
+        view.backgroundColor = UIColor.FH.backgroundBase.color
+        navigationController?.navigationBar.tintColor = UIColor.FH.signatureGreen.color
+
     }
     
     override func setupLayouts() {

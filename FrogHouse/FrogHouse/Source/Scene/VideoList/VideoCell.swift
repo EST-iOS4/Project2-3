@@ -19,7 +19,7 @@ final class VideoCell: UICollectionViewCell {
         imageView.contentMode = .scaleAspectFill
         imageView.clipsToBounds = true
         imageView.layer.cornerRadius = 8
-        imageView.backgroundColor = .tertiarySystemFill // TODO: 송지석 (색상 추후 교체)
+        imageView.backgroundColor = UIColor.FH.backgroundBase.color // TODO: 송지석 (색상 추후 교체)
         imageView.image = UIImage(systemName: "video")
         return imageView
     }()
@@ -27,7 +27,7 @@ final class VideoCell: UICollectionViewCell {
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.FH.title(size: 20)
-        label.textColor = .label // TODO: 송지석 (색상 추후 교체)
+        label.textColor = UIColor.FH.primary.color // TODO: 송지석 (색상 추후 교체)
         label.numberOfLines = 1
         label.lineBreakMode = .byTruncatingTail
         return label
@@ -36,7 +36,7 @@ final class VideoCell: UICollectionViewCell {
     private let descriptionLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.FH.body(size: 15)
-        label.textColor = .secondaryLabel // TODO: 송지석 (색상 추후 교체)
+        label.textColor = UIColor.FH.secondary.color // TODO: 송지석 (색상 추후 교체)
         label.numberOfLines = 2
         label.lineBreakMode = .byTruncatingTail
         return label
@@ -66,7 +66,7 @@ final class VideoCell: UICollectionViewCell {
     private func setupUI() {
         // TODO: 송지석 (색상 추후 교체)
         backgroundColor = .clear
-        contentView.backgroundColor = .clear
+        contentView.backgroundColor =  UIColor.FH.backgroundBase.color
         
         [thumbnailImageView, likeButton, titleLabel, descriptionLabel].forEach { contentView.addSubview($0) }
     }
@@ -113,7 +113,7 @@ extension VideoCell {
     
     func updateState(_ liked: Bool) {
         let buttonImage = UIImage(systemName: liked ? "heart.fill" : "heart")
-        let buttonColor: UIColor = liked ? .systemRed : .label // TODO: - 송지석 (색상 추후 교체)
+        let buttonColor: UIColor = liked ? UIColor.FH.emphasis.color :  UIColor.FH.primary.color  // TODO: - 송지석 (색상 추후 교체)
 
         likeButton.setImage(buttonImage, for: .normal)
         likeButton.tintColor = buttonColor

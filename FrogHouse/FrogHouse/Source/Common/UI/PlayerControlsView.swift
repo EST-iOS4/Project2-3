@@ -43,7 +43,7 @@ final class PlayerControlsView: UIView {
         let button = UIButton()
         let image = UIImage(systemName: "gobackward.10", withConfiguration: UIImage.SymbolConfiguration(pointSize: 28, weight: .regular))
         // FIXME: - 이건준 FH Color색상으로 변경
-        button.tintColor = .label
+        button.tintColor = UIColor.FH.signatureGreen.color
         button.setImage(image, for: .normal)
         return button
     }()
@@ -52,7 +52,7 @@ final class PlayerControlsView: UIView {
         let button = UIButton()
         let image = UIImage(systemName: "goforward.10", withConfiguration: UIImage.SymbolConfiguration(pointSize: 28, weight: .regular))
         // FIXME: - 이건준 FH Color색상으로 변경
-        button.tintColor = .label
+        button.tintColor = UIColor.FH.signatureGreen.color
         button.setImage(image, for: .normal)
         return button
     }()
@@ -60,17 +60,17 @@ final class PlayerControlsView: UIView {
     private let playPauseButton: UIButton = {
         let button = UIButton()
         // FIXME: - 이건준 FH Color색상으로 변경
-        button.tintColor = .label
+        button.tintColor = UIColor.FH.signatureGreen.color
         return button
     }()
     
     private let speedButton: UIButton = {
         let button = UIButton()
         // FIXME: - 이건준 FH Color색상으로 변경
-        button.setTitleColor(.label, for: .normal)
+        button.setTitleColor(UIColor.FH.signatureGreen.color, for: .normal)
         button.titleLabel?.font = .FH.caption(size: 16)
         button.layer.borderWidth = 1
-        button.layer.borderColor = UIColor.black.cgColor
+        button.layer.borderColor = UIColor.FH.quaternary.cgColor
         button.layer.cornerRadius = 8
         return button
     }()
@@ -78,9 +78,9 @@ final class PlayerControlsView: UIView {
     private let muteButton: UIButton = {
         let button = UIButton()
         // FIXME: - 이건준 FH Color색상으로 변경
-        button.tintColor = .label
+        button.tintColor = UIColor.FH.signatureGreen.color
         button.layer.borderWidth = 1
-        button.layer.borderColor = UIColor.black.cgColor
+        button.layer.borderColor = UIColor.FH.quaternary.cgColor
         button.layer.cornerRadius = 8
         return button
     }()

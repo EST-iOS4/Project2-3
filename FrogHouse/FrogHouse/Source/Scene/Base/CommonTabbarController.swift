@@ -38,7 +38,7 @@ final class CommonTabbarController: UITabBarController {
         }
         
         self.viewControllers = viewControllers
-        tabBar.tintColor = .systemBlue
-        tabBar.backgroundColor = .systemBackground
+        tabBar.tintColor = UIColor.FH.signatureGreen.color
+        tabBar.backgroundColor = UIColor.FH.backgroundBase.color
     }
 }
