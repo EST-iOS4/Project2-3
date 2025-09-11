@@ -44,14 +44,14 @@ final class EmptyView: UIView {
     // MARK: - UI Components
     private let iconImageView: UIImageView = {
         let imageView = UIImageView()
-        imageView.tintColor = .systemGray3
+        imageView.tintColor = UIColor.FH.signatureGreen.color
         imageView.contentMode = .scaleAspectFit
         return imageView
     }()
     
     private let titleLabel: UILabel = {
         let label = UILabel()
-        label.textColor = .label
+        label.textColor = UIColor.FH.primary.color
         label.font = .systemFont(ofSize: 18, weight: .semibold)
         label.textAlignment = .center
         return label
@@ -59,7 +59,7 @@ final class EmptyView: UIView {
     
     private let subtitleLabel: UILabel = {
         let label = UILabel()
-        label.textColor = .secondaryLabel
+        label.textColor = UIColor.FH.secondary.color
         label.font = .systemFont(ofSize: 14)
         label.textAlignment = .center
         label.numberOfLines = 0
@@ -82,7 +82,7 @@ final class EmptyView: UIView {
     
     // MARK: - Setup
     private func setupUI() {
-        backgroundColor = .clear
+        backgroundColor = UIColor.FH.backgroundBase.color
         [iconImageView, titleLabel, subtitleLabel].forEach { addSubview($0) }
     }
     
