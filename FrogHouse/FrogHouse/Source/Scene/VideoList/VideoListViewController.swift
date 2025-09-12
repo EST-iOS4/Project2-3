@@ -129,10 +129,15 @@ final class VideoListViewController: BaseViewController<VideoListViewModel> {
         }
         categorySegmentedControl.selectedSegmentIndex = viewModel.selectedCategoryIndex
     }
-    @objc private func didPullToRefresh() {
-        viewModel.fetchVideoList()
-    }
     
+    @objc
+    private func didPullToRefresh() {
+        do {
+            try viewModel.fetchVideoList()
+        } catch {
+            
+        }
+    }
     
     @objc
     private func categoryChanged(_ sender: UISegmentedControl) {

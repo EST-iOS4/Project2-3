@@ -10,7 +10,7 @@ import UIKit
 
 final class MyVideoViewController: BaseViewController<MyVideoViewModel> {
     private var histories: [HistoryItem] = []
-    private var recommendedVideos: [VideoListViewModel.Item] = []
+    private var recommendedVideos: [Video] = []
     
     //TODO: 서정원 - String -> Image 타입으로 변경하는 메서드가 필요함
     let demoHistories = [
@@ -24,14 +24,7 @@ final class MyVideoViewController: BaseViewController<MyVideoViewModel> {
         HistoryItem(title: "오늘의 하이라이트8", thumbnailURL: "")
     ]
     
-    let demoRecommendedVideos = [
-        VideoListViewModel.Item(title: "asd1", description: "asd", thumbnailImageURL: nil, isLiked: false, categories: []),
-        VideoListViewModel.Item(title: "asd2", description: "asd", thumbnailImageURL: nil, isLiked: false, categories: []),
-        VideoListViewModel.Item(title: "asd3", description: "asd", thumbnailImageURL: nil, isLiked: false, categories: []),
-        VideoListViewModel.Item(title: "asd4", description: "asd", thumbnailImageURL: nil, isLiked: false, categories: []),
-        VideoListViewModel.Item(title: "asd5", description: "asd", thumbnailImageURL: nil, isLiked: false, categories: []),
-        VideoListViewModel.Item(title: "asd6", description: "asd", thumbnailImageURL: nil, isLiked: false, categories: [])
-    ]
+    let demoRecommendedVideos: [Video] = []
     
     private lazy var collectionView: UICollectionView = {
         let cv = UICollectionView(frame: .zero, collectionViewLayout: makeLayout())
@@ -87,13 +80,13 @@ final class MyVideoViewController: BaseViewController<MyVideoViewModel> {
         }
     }()
     
-    private let videoCellRegistration = UICollectionView.CellRegistration<VideoCell, VideoListViewModel.Item> { cell, _, model in
-        cell.configure(title: model.title, description: model.description, isLiked: model.isLiked, thumbnailImageURL: model.thumbnailImageURL)
+    private let videoCellRegistration = UICollectionView.CellRegistration<VideoCell, Video> { cell, _, model in
+        cell.configure(title: model.title, description: model.description, isLiked: model.isLiked, thumbnailImageURL: model.thumbnailURL)
     }
     
     override func setupUI() {
         super.setupUI()
-        
+        navigationItem.title = "나만의 비디오"
         collectionView.dataSource = self.dataSource
         configureData(histories: demoHistories, recommendedVideos: demoRecommendedVideos, animate: false)
     }
@@ -116,7 +109,7 @@ final class MyVideoViewController: BaseViewController<MyVideoViewModel> {
         super.bind()
     }
     
-    func configureData(histories: [HistoryItem], recommendedVideos: [VideoListViewModel.Item], animate: Bool = true) {
+    func configureData(histories: [HistoryItem], recommendedVideos: [Video], animate: Bool = true) {
         self.histories = histories
         self.recommendedVideos = recommendedVideos
         applySnapshot(animate: animate)
