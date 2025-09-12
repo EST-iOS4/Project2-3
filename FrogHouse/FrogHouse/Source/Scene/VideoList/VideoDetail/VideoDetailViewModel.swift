@@ -10,7 +10,7 @@ import Combine
 import Foundation
 
 final class VideoDetailViewModel: ObservableObject {
-    @Published private(set) var isPlaying: Bool = false
+    @Published private(set) var isPlaying: Bool = true
     @Published private(set) var isMuted: Bool = false
     @Published private(set) var currentSpeed: Float = 1.0
     @Published private(set) var endTime: String = "0:00"
@@ -36,6 +36,8 @@ final class VideoDetailViewModel: ObservableObject {
     func seekBackward() { playManager.seekBackward() }
     func seekForward() { playManager.seekForward() }
     func seek(to value: Float) { playManager.seek(to: value) }
+    func resetPlayer() { playManager.reset() }
+    func play() { playManager.play() }
     
     private func bindManager() {
         playManager.$isPlaying
