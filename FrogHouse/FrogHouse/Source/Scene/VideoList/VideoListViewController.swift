@@ -13,6 +13,8 @@ final class VideoListViewController: BaseViewController<VideoListViewModel> {
     }
     private var dataSource: UICollectionViewDiffableDataSource<Section, Video>!
     
+    private var categoryItem: UIBarButtonItem?
+    
     private let scrollView: UIScrollView = {
         let scrollView = UIScrollView()
         scrollView.backgroundColor = .clear
@@ -60,8 +62,31 @@ final class VideoListViewController: BaseViewController<VideoListViewModel> {
     override func setupUI() {
         super.setupUI()
         navigationItem.title = "모든 콘텐츠"
+        installCategoryButton()
     }
     
+    private func installCategoryButton() {
+        let menu = makeCategoryMenu()
+        categoryItem = UIBarButtonItem(title: viewModel.categories[viewModel.selectedCategoryIndex].title,
+                                       primaryAction: nil,
+                                       menu: menu
+        )
+        navigationItem.rightBarButtonItem = categoryItem
+    }
+    
+    private func makeCategoryMenu() -> UIMenu {
+        let actions = viewModel.categories.enumerated().map { (index, category) in
+            UIAction(
+                title: category.title,
+                state: index == viewModel.selectedCategoryIndex ? .on : .off
+            ) { [weak self] _ in
+                guard let self else { return }
+                self.viewModel.selectCategory(at: index)
+                self.installCategoryButton() // 타이틀/체크 갱신
+            }
+        }
+        return UIMenu(title: "카테고리", options: .displayInline, children: actions)
+    }
     override func setupLayouts() {
         [scrollView, emptyView].forEach { view.addSubview($0) }
         scrollView.addSubview(containerStackView)
@@ -84,7 +109,7 @@ final class VideoListViewController: BaseViewController<VideoListViewModel> {
             .width(view.widthAnchor)
         
         emptyView.anchor
-            .top(view.safeAreaLayoutGuide.bottomAnchor)
+            .top(view.safeAreaLayoutGuide.topAnchor)
             .leading(view.leadingAnchor)
             .trailing(view.trailingAnchor)
             .bottom(view.safeAreaLayoutGuide.bottomAnchor)
