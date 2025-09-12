@@ -28,7 +28,7 @@ final class SectionHeaderView: UICollectionReusableView {
         
         container.anchor
             .top(topAnchor)
-            .leading(leadingAnchor, offset: 16)
+            .leading(leadingAnchor)
             .trailing(trailingAnchor, offset: 16)
             .bottom(bottomAnchor)
         
