@@ -83,6 +83,7 @@ final class EmptyView: UIView {
     // MARK: - Setup
     private func setupUI() {
         backgroundColor = UIColor.FH.backgroundBase.color
+        isHidden = true
         [iconImageView, titleLabel, subtitleLabel].forEach { addSubview($0) }
     }
     

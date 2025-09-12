@@ -26,7 +26,7 @@ final class RecommendedVideoViewController: BaseViewController<RecommendedVideoV
     }
 
     override func setupUI() {
-        view.backgroundColor = .systemBackground
+        navigationItem.title = "추천 영상"
 
         // MARK: Jay - Carousel 아이템 데이터 구성 (url + title + detail)
         let carouselItems: [RecommendedCarouselItem] = viewModel.items.map {

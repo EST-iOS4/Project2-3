@@ -79,12 +79,12 @@ final class VideoCell: UICollectionViewCell {
             .width(120)
         
         likeButton.anchor
-            .top(contentView.topAnchor)
+            .top(titleLabel.topAnchor)
             .trailing(contentView.trailingAnchor)
             .size(width: 24, height: 24)
         
         titleLabel.anchor
-            .top(contentView.topAnchor)
+            .top(contentView.topAnchor, offset: 5)
             .leading(thumbnailImageView.trailingAnchor, offset: 12)
             .trailing(likeButton.leadingAnchor, offset: 8)
         

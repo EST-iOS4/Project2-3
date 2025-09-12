@@ -9,26 +9,36 @@ import Foundation
 
 enum VideoCategory: String, Encodable, CaseIterable {
     case all
-    case music = "10"
-    case sports = "17"
-    case travel = "19"
-    case gaming = "20"
-    case movies = "30"
-    
+    case animation
+    case comedy
+    case action
+    case sf
+    case drama
+    case fantasy
+    case demo
+    case thriller
+    case daily
+    case car
+    case experiment
+    case adventure   
+    case unknown
+
     var title: String {
         switch self {
-        case .all:
-            return "전체"
-        case .travel:
-            return "여행"
-        case .music:
-            return "음악"
-        case .sports:
-            return "스포츠"
-        case .gaming:
-            return "게임"
-        case .movies:
-            return "영화"
+        case .all: return "전체"
+        case .animation: return "애니메이션"
+        case .comedy: return "코미디"
+        case .action: return "액션"
+        case .sf: return "SF"
+        case .drama: return "드라마"
+        case .fantasy: return "판타지"
+        case .demo: return "데모"
+        case .thriller: return "스릴러"
+        case .daily: return "일상"
+        case .car: return "자동차"
+        case .experiment: return "실험"
+        case .adventure: return "모험"
+        case .unknown: return "알 수 없음"
         }
     }
 }
