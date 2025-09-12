@@ -9,6 +9,12 @@ import Combine
 import Foundation
 
 final class MyVideoViewModel {
+    struct HistoryItem: Hashable {
+        let id = UUID()
+        let title: String
+        let thumbnailURL: URL?
+    }
+
     private var histories: [HistoryItem] = []
     private var recommendedVideos: [VideoListViewModel.Item] = []
     

@@ -7,8 +7,3 @@
 
 import Foundation
 
-struct HistoryItem: Hashable {
-    let id = UUID()
-    let title: String
-    let thumbnailURL: URL?
-}
