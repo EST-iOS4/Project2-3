@@ -46,6 +46,18 @@ final class VideoDetailViewController: BaseViewController<VideoDetailViewModel> 
         playerLayer?.frame = playerContainerView.bounds
     }
     
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        viewModel.play()
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        if isMovingFromParent {
+            viewModel.resetPlayer()
+        }
+    }
+    
     // MARK: - Setup
     override func setupLayouts() {
         super.setupLayouts()
