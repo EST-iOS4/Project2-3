@@ -67,10 +67,22 @@ final class VideoListViewController: BaseViewController<VideoListViewModel> {
     
     private func installCategoryButton() {
         let menu = makeCategoryMenu()
-        categoryItem = UIBarButtonItem(title: viewModel.categories[viewModel.selectedCategoryIndex].title,
-                                       primaryAction: nil,
-                                       menu: menu
-        )
+        
+        let chevronImage = UIImage(systemName: "chevron.down")?.withRenderingMode(.alwaysTemplate)
+        
+        let button = UIButton(type: .system)
+        button.setPreferredSymbolConfiguration(UIImage.SymbolConfiguration(pointSize: 15, weight: .medium), forImageIn: .normal)
+        button.setTitle(viewModel.categories[viewModel.selectedCategoryIndex].title, for: .normal)
+        button.setImage(chevronImage, for: .normal)
+        button.semanticContentAttribute = .forceRightToLeft
+        button.tintColor = UIColor.FH.signatureGreen.color
+        button.setTitleColor(UIColor.FH.signatureGreen.color, for: .normal)
+        button.titleLabel?.font = .systemFont(ofSize: 16, weight: .medium)
+
+        button.showsMenuAsPrimaryAction = true
+        button.menu = menu
+        
+        categoryItem = UIBarButtonItem(customView: button)
         navigationItem.rightBarButtonItem = categoryItem
     }
     
