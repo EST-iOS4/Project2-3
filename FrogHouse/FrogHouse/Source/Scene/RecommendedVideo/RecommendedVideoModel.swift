@@ -7,16 +7,16 @@
 
 import Foundation
 
-public struct RecommendedVideoModel: Equatable, Identifiable {
+struct RecommendedVideoModel: Equatable, Identifiable {
     
-    public let id = UUID()
-    public let title: String
-    public let detail: String
-    public let tags: [String]
-    public let thumbnailURL: URL
+    let id = UUID()
+    let title: String
+    let detail: String
+    let tags: [String]
+    let thumbnailURL: URL
     
     // MARK: Jay - Init
-    public init(title: String, detail: String, tags: [String], thumbnailURL: URL) {
+    init(title: String, detail: String, tags: [String], thumbnailURL: URL) {
         self.title = title
         self.detail = detail
         self.tags = tags

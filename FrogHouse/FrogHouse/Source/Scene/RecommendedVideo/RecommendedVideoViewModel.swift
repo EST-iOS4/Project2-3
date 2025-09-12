@@ -8,7 +8,7 @@
 import Foundation
 
 // MARK: Jay - Repository 임시 프로토콜 (API 받아서 교체예정)
-public protocol RecommendedVideoTempRepository {
+protocol RecommendedVideoTempRepository {
     func fetchRecommended() async throws -> [RecommendedVideoModel]
 }
 
@@ -16,10 +16,10 @@ public protocol RecommendedVideoTempRepository {
 final class RecommendedVideoViewModel {
     
     // MARK: Jay - Outputs (UI 업데이트 신호)
-    public var onCurrentItemChanged: ((RecommendedVideoModel, Int, Int) -> Void)?
-    public var onListUpdated: (([RecommendedVideoModel]) -> Void)?
-    public var onLoadingChanged: ((Bool) -> Void)?
-    public var onError: ((String) -> Void)?
+    var onCurrentItemChanged: ((RecommendedVideoModel, Int, Int) -> Void)?
+    var onListUpdated: (([RecommendedVideoModel]) -> Void)?
+    var onLoadingChanged: ((Bool) -> Void)?
+    var onError: ((String) -> Void)?
     
     // MARK: Jay - Data
     private(set) var items: [RecommendedVideoModel] = []
@@ -33,19 +33,19 @@ final class RecommendedVideoViewModel {
     private let maxCount = 30
     
     // MARK: Jay - Init (Mock / 수동 주입용)
-    public init(items: [RecommendedVideoModel]) {
+    init(items: [RecommendedVideoModel]) {
         // MARK: Jay - 현재 임의로 30개 제한 (변경될수 있음)
         self.items = Array(items.prefix(maxCount))
         self.repository = nil
     }
     
     // MARK: Jay - Init (API 주입용)
-    public init(repository: RecommendedVideoTempRepository) {
+    init(repository: RecommendedVideoTempRepository) {
         self.repository = repository
     }
     
     // MARK: Jay - Load (Mock / API 모두 여기로 통일)
-    public func load() {
+    func load() {
         guard let repository else {
             // Mock 모드: 현재 보유 items 방출
             onListUpdated?(items)
@@ -74,11 +74,11 @@ final class RecommendedVideoViewModel {
     }
     
     // MARK: Jay - Index 제어
-    public func setCurrentIndex(_ index: Int) {
+    func setCurrentIndex(_ index: Int) {
         guard items.indices.contains(index), currentIndex != index else { return }
         currentIndex = index
     }
-    public func item(at index: Int) -> RecommendedVideoModel? {
+    func item(at index: Int) -> RecommendedVideoModel? {
         guard items.indices.contains(index) else { return nil }
         return items[index]
     }

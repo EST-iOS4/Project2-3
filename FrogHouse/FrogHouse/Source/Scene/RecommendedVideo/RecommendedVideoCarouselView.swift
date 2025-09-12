@@ -96,8 +96,7 @@ final class RecommendedVideoCarouselView: UIView, UICollectionViewDelegate, UICo
             syncScroll(toVirtual: currentVirtualIndex, animated: false)
         }
     }
-
-    // MARK: Jay - Public API
+    
     func setItems(_ items: [RecommendedCarouselItem]) {
         self.baseItems = items
         collectionView.reloadData()

@@ -8,9 +8,9 @@
 import UIKit
 
 // MARK: Jay - 간단한 이미지 로더 + 메모리 캐시
-public final class RecommendedVideoImageLoader {
+final class RecommendedVideoImageLoader {
     // MARK: Jay - Shared
-    public static let shared = RecommendedVideoImageLoader()
+    static let shared = RecommendedVideoImageLoader()
     // MARK: Jay - Cache
     private let cache = NSCache<NSURL, UIImage>()
     // MARK: Jay - Session
@@ -22,7 +22,7 @@ public final class RecommendedVideoImageLoader {
     }
     
     // MARK: Jay - 이미지 로드 (메인스레드 콜백)
-    public func loadImage(from url: URL, completion: @escaping (UIImage?) -> Void) {
+    func loadImage(from url: URL, completion: @escaping (UIImage?) -> Void) {
         let key = url as NSURL
         if let cached = cache.object(forKey: key) {
             DispatchQueue.main.async { completion(cached) }
@@ -39,12 +39,12 @@ public final class RecommendedVideoImageLoader {
     }
     
     // MARK: Jay - 캐시 동기 조회 추가
-    public func cachedImage(for url: URL) -> UIImage? {
+    func cachedImage(for url: URL) -> UIImage? {
         return cache.object(forKey: url as NSURL)
     }
     
     // MARK: Jay - 프리페치 추가 (미리 로드해서 캐시만 채움)
-    public func prefetch(urls: [URL]) {
+    func prefetch(urls: [URL]) {
         for url in urls {
             let key = url as NSURL
             // 이미 캐시에 있으면 스킵
@@ -58,7 +58,7 @@ public final class RecommendedVideoImageLoader {
 }
 
 // MARK: Jay - UIImageView URL 확장
-public extension UIImageView {
+extension UIImageView {
     // MARK: Jay - URL 로 이미지 설정 (페이드) + 캐시 히트 시 즉시 세팅으로 깜빡임 줄임
     func setImage(from url: URL?, placeholder: UIImage? = nil) {
         self.layer.removeAllAnimations() // MARK: Jay - 셀 재사용시 애니메이션 잔상 제거
