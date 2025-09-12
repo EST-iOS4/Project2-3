@@ -10,7 +10,7 @@ import Kingfisher
 import UIKit
 
 final class MyVideoViewController: BaseViewController<MyVideoViewModel> {
-    private var histories: [HistoryItem] = []
+    private var histories: [MyVideoViewModel.HistoryItem] = []
     private var recommendedVideos: [VideoListViewModel.Item] = []
     var onLikeTapped: (() -> Void)?
     
@@ -23,7 +23,7 @@ final class MyVideoViewController: BaseViewController<MyVideoViewModel> {
     }()
     
     private var dataSource: UICollectionViewDiffableDataSource<MyVideoSection, MyVideoItem>!
-    private var historyRegistration: UICollectionView.CellRegistration<HistoryCardCell,HistoryItem>!
+    private var historyRegistration: UICollectionView.CellRegistration<HistoryCardCell,MyVideoViewModel.HistoryItem>!
     private var videoCellRegistration: UICollectionView.CellRegistration<VideoCell, VideoListViewModel.Item>!
     
     private let headerRegistration: UICollectionView.SupplementaryRegistration<
@@ -73,7 +73,7 @@ final class MyVideoViewController: BaseViewController<MyVideoViewModel> {
     }
     
     private func setupDataSource() {
-        historyRegistration = UICollectionView.CellRegistration<HistoryCardCell, HistoryItem> { cell, _, model in
+        historyRegistration = UICollectionView.CellRegistration<HistoryCardCell, MyVideoViewModel.HistoryItem> { cell, _, model in
             cell.configure(with: model)
         }
         
@@ -109,7 +109,7 @@ final class MyVideoViewController: BaseViewController<MyVideoViewModel> {
         }
     }
     
-    func configureData(histories: [HistoryItem], recommendedVideos: [VideoListViewModel.Item], animate: Bool = true) {
+    func configureData(histories: [MyVideoViewModel.HistoryItem], recommendedVideos: [VideoListViewModel.Item], animate: Bool = true) {
         self.histories = histories
         self.recommendedVideos = recommendedVideos
         applySnapshot(animate: animate)

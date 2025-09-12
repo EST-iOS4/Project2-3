@@ -56,7 +56,7 @@ final class HistoryCardCell: UICollectionViewCell {
     }
     
     //TODO: 서정원 - 네트워크 통신을 통해 받아와야 함
-    func configure(with model: HistoryItem) {
+    func configure(with model: MyVideoViewModel.HistoryItem) {
         titleLabel.text = model.title
         
         let placeholder = UIImage(systemName: "photo.fill")
