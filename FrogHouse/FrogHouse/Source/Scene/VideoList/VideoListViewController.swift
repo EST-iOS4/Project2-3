@@ -38,7 +38,7 @@ final class VideoListViewController: BaseViewController<VideoListViewModel> {
     private lazy var videoCollectionView: AutoSizingCollectionView = {
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = .vertical
-        layout.minimumLineSpacing = 8
+        layout.minimumLineSpacing = 15
         
         let collectionView = AutoSizingCollectionView(frame: .zero, collectionViewLayout: layout)
         collectionView.backgroundColor = UIColor.FH.backgroundBase.color // TODO: 송지석 (색상 추후 교체)
@@ -60,11 +60,7 @@ final class VideoListViewController: BaseViewController<VideoListViewModel> {
     
     override func setupUI() {
         super.setupUI()
-        title = "모든 콘텐츠"
-        
-        view.backgroundColor = UIColor.FH.backgroundBase.color
-        navigationController?.navigationBar.tintColor = UIColor.FH.signatureGreen.color
-
+        navigationItem.title = "모든 콘텐츠"
     }
     
     override func setupLayouts() {
@@ -140,7 +136,11 @@ final class VideoListViewController: BaseViewController<VideoListViewModel> {
     
     @objc
     private func categoryChanged(_ sender: UISegmentedControl) {
-        viewModel.selectCategory(at: sender.selectedSegmentIndex)
+        do {
+            try viewModel.selectCategory(at: sender.selectedSegmentIndex)
+        } catch {
+            
+        }
     }
 }
 
@@ -188,6 +188,6 @@ extension VideoListViewController: UICollectionViewDelegateFlowLayout {
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        return CGSize(width: collectionView.bounds.width, height: 120)
+        return CGSize(width: collectionView.bounds.width, height: 80)
     }
 }

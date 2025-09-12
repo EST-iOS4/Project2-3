@@ -41,7 +41,7 @@ class BaseViewController<ViewModel>: UIViewController {
     /// 뷰 컨트롤러의 UI 속성을 설정합니다.
     /// 예: 배경색, 타이틀, 네비게이션 바 스타일 등
     func setupUI() {
-        self.view.backgroundColor = .systemBackground
+        view.backgroundColor = UIColor.FH.backgroundBase.color
     }
     
     /// ViewModel 바인딩에 필요한 코드
