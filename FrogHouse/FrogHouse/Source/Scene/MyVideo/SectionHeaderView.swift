@@ -39,8 +39,10 @@ final class SectionHeaderView: UICollectionReusableView {
             .bottom(container.bottomAnchor, offset: 8)
         
         actionButton.titleLabel?.font = .systemFont(ofSize: 15, weight: .semibold)
+        actionButton.setTitleColor(UIColor.FH.signatureGreen.color, for: .normal)
         actionButton.setContentHuggingPriority(.required, for: .horizontal)
         actionButton.anchor
+        
             .centerY(titleLabel.centerYAnchor)
             .trailing(container.trailingAnchor)
         
