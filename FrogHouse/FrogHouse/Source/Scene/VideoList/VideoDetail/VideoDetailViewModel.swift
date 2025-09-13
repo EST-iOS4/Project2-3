@@ -13,20 +13,23 @@ final class VideoDetailViewModel: ObservableObject {
     @Published private(set) var isPlaying: Bool = true
     @Published private(set) var isMuted: Bool = false
     @Published private(set) var currentSpeed: Float = 1.0
+    @Published private(set) var startTime: String = "0:00"
     @Published private(set) var endTime: String = "0:00"
     @Published private(set) var currentTimeRatio: Float = 0
+    @Published private(set) var video: Video?
     
     private let playManager: AVPlayManager
     private var cancellables = Set<AnyCancellable>()
     
-    init(videoURL: URL?, playManager: AVPlayManager = .shared) {
+    init(video: Video, playManager: AVPlayManager = .shared) {
         self.playManager = playManager
+        self.video = video
         
         bindManager()
         observeCurrentTime()
         observeDuration()
         
-        playManager.loadVideo(url: videoURL)
+        playManager.loadVideo(url: video.mp4URL)
     }
     
     func getPlayer() -> AVPlayer { playManager.getPlayer() }
@@ -41,25 +44,31 @@ final class VideoDetailViewModel: ObservableObject {
     
     private func bindManager() {
         playManager.$isPlaying
-            .receive(on: RunLoop.main)
             .assign(to: &$isPlaying)
         
         playManager.$isMuted
-            .receive(on: RunLoop.main)
             .assign(to: &$isMuted)
         
         playManager.$currentSpeed
-            .receive(on: RunLoop.main)
             .assign(to: &$currentSpeed)
     }
     
     private func observeCurrentTime() {
-        playManager.$currentTime
+        let currentTimePublisher = playManager.$currentTime.share()
+        
+        currentTimePublisher
             .map { [weak self] currentTime -> Float in
                 guard let duration = self?.playManager.duration, duration > 0 else { return 0 }
                 return Float(currentTime / duration)
             }
             .assign(to: &$currentTimeRatio)
+        
+        currentTimePublisher
+            .map { currentTime -> String in
+                guard currentTime.isFinite else { return "0:00" }
+                return currentTime.formattedTime
+            }
+            .assign(to: &$startTime)
     }
     
     private func observeDuration() {

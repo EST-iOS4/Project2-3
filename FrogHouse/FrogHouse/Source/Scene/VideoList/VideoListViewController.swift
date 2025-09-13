@@ -53,7 +53,7 @@ final class VideoListViewController: BaseViewController<VideoListViewModel> {
         do {
             try viewModel.fetchVideoList()
         } catch {
-            
+            showSnackBar(type: .fetchVideo(false))
         }
     }
     
@@ -93,8 +93,12 @@ final class VideoListViewController: BaseViewController<VideoListViewModel> {
                 state: index == viewModel.selectedCategoryIndex ? .on : .off
             ) { [weak self] _ in
                 guard let self else { return }
-                self.viewModel.selectCategory(at: index)
-                self.installCategoryButton() // 타이틀/체크 갱신
+                do {
+                    try viewModel.selectCategory(at: index)
+                    installCategoryButton() 
+                } catch {
+                    showSnackBar(type: .fetchVideo(false))
+                }
             }
         }
         return UIMenu(title: "카테고리", options: .displayInline, children: actions)
@@ -148,7 +152,7 @@ final class VideoListViewController: BaseViewController<VideoListViewModel> {
         do {
             try viewModel.fetchVideoList()
         } catch {
-            
+            showSnackBar(type: .fetchVideo(false))
         }
     }
 }
@@ -172,8 +176,9 @@ extension VideoListViewController {
                 do {
                     try self.viewModel.toggleLike(at: item)
                     cell.updateState(item.isLiked)
+                    showSnackBar(type: item.isLiked ? .updateLikedState(true) : .updateUnLikedState(true))
                 } catch {
-                    print("좋아요 \(item.isLiked ? "취소" : "등록")에 실패하였습니다.")
+                    showSnackBar(type: item.isLiked ? .updateLikedState(false) : .updateUnLikedState(false))
                 }
             }
             return cell
@@ -192,7 +197,7 @@ extension VideoListViewController {
 extension VideoListViewController: UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         guard let item = dataSource.itemIdentifier(for: indexPath) else { return }
-        let vc = VideoDetailViewController(viewModel: VideoDetailViewModel(videoURL: item.mp4URL))
+        let vc = VideoDetailViewController(viewModel: VideoDetailViewModel(video: item))
         navigationController?.pushViewController(vc, animated: true)
     }
     

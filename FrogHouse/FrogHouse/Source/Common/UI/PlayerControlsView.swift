@@ -40,45 +40,55 @@ final class PlayerControlsView: UIView {
     
     // MARK: - Buttons
     private let seekBackwardButton: UIButton = {
-        let button = UIButton()
-        let image = UIImage(systemName: "gobackward.10", withConfiguration: UIImage.SymbolConfiguration(pointSize: 28, weight: .regular))
-        // FIXME: - 이건준 FH Color색상으로 변경
-        button.tintColor = UIColor.FH.signatureGreen.color
-        button.setImage(image, for: .normal)
+        var config = UIButton.Configuration.plain()
+        config.image = UIImage(systemName: "gobackward.10", withConfiguration: UIImage.SymbolConfiguration(pointSize: 22, weight: .regular))
+        config.baseForegroundColor = UIColor.FH.signatureGreen.color
+        config.contentInsets = .zero
+
+        let button = UIButton(configuration: config)
         return button
     }()
-    
+
     private let seekForwardButton: UIButton = {
-        let button = UIButton()
-        let image = UIImage(systemName: "goforward.10", withConfiguration: UIImage.SymbolConfiguration(pointSize: 28, weight: .regular))
-        // FIXME: - 이건준 FH Color색상으로 변경
-        button.tintColor = UIColor.FH.signatureGreen.color
-        button.setImage(image, for: .normal)
+        var config = UIButton.Configuration.plain()
+        config.image = UIImage(systemName: "goforward.10", withConfiguration: UIImage.SymbolConfiguration(pointSize: 22, weight: .regular))
+        config.baseForegroundColor = UIColor.FH.signatureGreen.color
+        config.contentInsets = .zero
+
+        let button = UIButton(configuration: config)
         return button
     }()
-    
+
     private let playPauseButton: UIButton = {
-        let button = UIButton()
-        // FIXME: - 이건준 FH Color색상으로 변경
-        button.tintColor = UIColor.FH.signatureGreen.color
+        var config = UIButton.Configuration.plain()
+        config.baseForegroundColor = UIColor.FH.signatureGreen.color
+        config.contentInsets = .zero
+
+        let button = UIButton(configuration: config)
         return button
     }()
-    
+
     private let speedButton: UIButton = {
-        let button = UIButton()
-        // FIXME: - 이건준 FH Color색상으로 변경
-        button.setTitleColor(UIColor.FH.signatureGreen.color, for: .normal)
-        button.titleLabel?.font = .FH.caption(size: 16)
+        var config = UIButton.Configuration.filled()
+        config.baseForegroundColor = UIColor.FH.signatureGreen.color
+        config.baseBackgroundColor = .clear
+        config.contentInsets = NSDirectionalEdgeInsets(top: 4, leading: 8, bottom: 4, trailing: 8)
+
+        let button = UIButton(configuration: config)
         button.layer.borderWidth = 1
         button.layer.borderColor = UIColor.FH.quaternary.cgColor
         button.layer.cornerRadius = 8
+        button.titleLabel?.font = .FH.caption(size: 14)
         return button
     }()
-    
+
     private let muteButton: UIButton = {
-        let button = UIButton()
-        // FIXME: - 이건준 FH Color색상으로 변경
-        button.tintColor = UIColor.FH.signatureGreen.color
+        var config = UIButton.Configuration.filled()
+        config.baseForegroundColor = UIColor.FH.signatureGreen.color
+        config.baseBackgroundColor = .clear
+        config.contentInsets = NSDirectionalEdgeInsets(top: 4, leading: 8, bottom: 4, trailing: 8)
+
+        let button = UIButton(configuration: config)
         button.layer.borderWidth = 1
         button.layer.borderColor = UIColor.FH.quaternary.cgColor
         button.layer.cornerRadius = 8
@@ -112,8 +122,8 @@ final class PlayerControlsView: UIView {
         playPauseButton.anchor.size(width: 60, height: 60)
         seekForwardButton.anchor.size(width: 50, height: 50)
         seekBackwardButton.anchor.size(width: 50, height: 50)
-        speedButton.anchor.size(width: 32, height: 25)
-        muteButton.anchor.size(width: 32, height: 25)
+        speedButton.anchor.size(width: 50, height: 32)
+        muteButton.anchor.size(width: 50, height: 32)
     }
     
     private func setupUI() {
@@ -151,33 +161,33 @@ final class PlayerControlsView: UIView {
 
 // MARK: - Public Methods
 extension PlayerControlsView {
-    func configureUI(
-        startTime: String,
-        endTime: String
-    ) {
-        videoProgressView.startTimeLabel.text = startTime
-        videoProgressView.endTimeLabel.text = endTime
+    func updateStartTime(_ time: String) {
+        videoProgressView.startTimeLabel.text = time
+    }
+    
+    func updateEndTime(_ time: String) {
+        videoProgressView.endTimeLabel.text = time
     }
     
     func updatePlayPauseButton(isPlaying: Bool) {
         let image = UIImage(
             systemName: isPlaying ? "pause" : "play.fill",
-            withConfiguration: UIImage.SymbolConfiguration(pointSize: 34, weight: .regular)
+            withConfiguration: UIImage.SymbolConfiguration(pointSize: 28, weight: .regular)
         )
-        playPauseButton.setImage(image, for: .normal)
+        playPauseButton.configuration?.image = image
     }
     
     func updateMuteButton(isMuted: Bool) {
         let image = UIImage(
             systemName: isMuted ? "speaker.slash.fill" : "speaker.wave.2.fill",
-            withConfiguration: UIImage.SymbolConfiguration(pointSize: 28, weight: .regular)
+            withConfiguration: UIImage.SymbolConfiguration(pointSize: 16, weight: .regular)
         )
-        muteButton.setImage(image, for: .normal)
+        muteButton.configuration?.image = image
     }
     
     func updateSpeedButton(speed: Float) {
         let title = "\(speed)x"
-        speedButton.setTitle(title, for: .normal)
+        speedButton.configuration?.title = title
     }
     
     func updateSlider(value: Float) {
