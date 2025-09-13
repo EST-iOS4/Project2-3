@@ -19,7 +19,6 @@ final class HistoryCardCell: UICollectionViewCell {
     
     private let titleLabel: UILabel = {
         let label = UILabel()
-        //TODO: 서정원 - 폰트 변경
         label.font = UIFont.FH.title(size: 14)
         label.numberOfLines = 2
         return label
@@ -55,7 +54,6 @@ final class HistoryCardCell: UICollectionViewCell {
         titleLabel.text = nil
     }
     
-    //TODO: 서정원 - 네트워크 통신을 통해 받아와야 함
     func configure(with model: MyVideoViewModel.HistoryItem) {
         titleLabel.text = model.title
         
