@@ -47,3 +47,10 @@ class BaseViewController<ViewModel>: UIViewController {
     /// ViewModel 바인딩에 필요한 코드
     func bind() { }
 }
+
+extension BaseViewController {
+    func showSnackBar(type: FHSnackBarType) {
+        FHSnackBar(contextView: view, type: type)
+            .show()
+    }
+}
