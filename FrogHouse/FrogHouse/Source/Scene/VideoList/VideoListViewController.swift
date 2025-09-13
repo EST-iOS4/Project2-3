@@ -11,9 +11,8 @@ final class VideoListViewController: BaseViewController<VideoListViewModel> {
     enum Section: Int, Hashable {
         case main
     }
+    private var categoryActions: [UIAction] = []
     private var dataSource: UICollectionViewDiffableDataSource<Section, Video>!
-    
-    private var categoryItem: UIBarButtonItem?
     
     private let scrollView: UIScrollView = {
         let scrollView = UIScrollView()
@@ -42,7 +41,7 @@ final class VideoListViewController: BaseViewController<VideoListViewModel> {
         layout.minimumLineSpacing = 15
         
         let collectionView = AutoSizingCollectionView(frame: .zero, collectionViewLayout: layout)
-        collectionView.backgroundColor = UIColor.FH.backgroundBase.color // TODO: 송지석 (색상 추후 교체)
+        collectionView.backgroundColor = UIColor.FH.backgroundBase.color
         collectionView.delegate = self
         collectionView.register(VideoCell.self, forCellWithReuseIdentifier: VideoCell.reuseIdentifier)
         return collectionView
@@ -59,50 +58,26 @@ final class VideoListViewController: BaseViewController<VideoListViewModel> {
     
     private let refreshControl = UIRefreshControl()
     
-    override func setupUI() {
-        super.setupUI()
-        navigationItem.title = "모든 콘텐츠"
-        installCategoryButton()
-    }
-    
-    private func installCategoryButton() {
-        let menu = makeCategoryMenu()
-        
+    private lazy var categoryDropdownButton: UIButton = {
+        let button = UIButton()
         let chevronImage = UIImage(systemName: "chevron.down")?.withRenderingMode(.alwaysTemplate)
         
-        let button = UIButton(type: .system)
         button.setPreferredSymbolConfiguration(UIImage.SymbolConfiguration(pointSize: 15, weight: .medium), forImageIn: .normal)
-        button.setTitle(viewModel.categories[viewModel.selectedCategoryIndex].title, for: .normal)
         button.setImage(chevronImage, for: .normal)
         button.semanticContentAttribute = .forceRightToLeft
         button.tintColor = UIColor.FH.signatureGreen.color
         button.setTitleColor(UIColor.FH.signatureGreen.color, for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 16, weight: .medium)
-
         button.showsMenuAsPrimaryAction = true
-        button.menu = menu
-        
-        categoryItem = UIBarButtonItem(customView: button)
-        navigationItem.rightBarButtonItem = categoryItem
+        return button
+    }()
+    
+    override func setupUI() {
+        super.setupUI()
+        navigationItem.title = "모든 콘텐츠"
+        updateCategoryMenu()
     }
     
-    private func makeCategoryMenu() -> UIMenu {
-        let actions = viewModel.categories.enumerated().map { (index, category) in
-            UIAction(
-                title: category.title,
-                state: index == viewModel.selectedCategoryIndex ? .on : .off
-            ) { [weak self] _ in
-                guard let self else { return }
-                do {
-                    try viewModel.selectCategory(at: index)
-                    installCategoryButton() 
-                } catch {
-                    showSnackBar(type: .fetchVideo(false))
-                }
-            }
-        }
-        return UIMenu(title: "카테고리", options: .displayInline, children: actions)
-    }
     override func setupLayouts() {
         [scrollView, emptyView].forEach { view.addSubview($0) }
         scrollView.addSubview(containerStackView)
@@ -117,11 +92,7 @@ final class VideoListViewController: BaseViewController<VideoListViewModel> {
         scrollView.pinToSuperview()
             .anchor.width(view.widthAnchor)
         
-        containerStackView.anchor
-            .top(scrollView.topAnchor)
-            .leading(scrollView.leadingAnchor)
-            .trailing(scrollView.trailingAnchor)
-            .bottom(scrollView.bottomAnchor)
+        containerStackView.pinToSuperview().anchor
             .width(view.widthAnchor)
         
         emptyView.anchor
@@ -140,13 +111,13 @@ final class VideoListViewController: BaseViewController<VideoListViewModel> {
                 self?.emptyView.isHidden = !videoItems.isEmpty
                 self?.applySnapshot(videoItems: videoItems)
                 
-                if self?.refreshControl.isRefreshing == true{
+                if self?.refreshControl.isRefreshing == true {
                     self?.refreshControl.endRefreshing()
                 }
             }
             .store(in: &cancellables)
     }
-
+    
     @objc
     private func didPullToRefresh() {
         do {
@@ -154,6 +125,31 @@ final class VideoListViewController: BaseViewController<VideoListViewModel> {
         } catch {
             showSnackBar(type: .fetchVideo(false))
         }
+    }
+    
+    private func updateCategoryMenu() {
+        let menu = makeCategoryMenu()
+        categoryDropdownButton.menu = menu
+        categoryDropdownButton.setTitle(viewModel.categories[viewModel.selectedCategoryIndex].title, for: .normal)
+        navigationItem.rightBarButtonItem = UIBarButtonItem(customView: categoryDropdownButton)
+    }
+    
+    private func makeCategoryMenu() -> UIMenu {
+        let actions = viewModel.categories.enumerated().map { (index, category) in
+            UIAction(
+                title: category.title,
+                state: index == viewModel.selectedCategoryIndex ? .on : .off
+            ) { [weak self] _ in
+                guard let self else { return }
+                do {
+                    try viewModel.selectCategory(at: index)
+                    updateCategoryMenu()
+                } catch {
+                    showSnackBar(type: .fetchVideo(false))
+                }
+            }
+        }
+        return UIMenu(title: "카테고리", options: .displayInline, children: actions)
     }
 }
 
@@ -171,8 +167,8 @@ extension VideoListViewController {
             
             cell.onLikeTapped = { [weak self] in
                 guard let self,
-                let selectedIndexPath = collectionView.indexPath(for: cell),
-                let item = self.dataSource.itemIdentifier(for: selectedIndexPath) else { return }
+                      let selectedIndexPath = collectionView.indexPath(for: cell),
+                      let item = self.dataSource.itemIdentifier(for: selectedIndexPath) else { return }
                 do {
                     try self.viewModel.toggleLike(at: item)
                     cell.updateState(item.isLiked)
