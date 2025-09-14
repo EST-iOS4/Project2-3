@@ -97,7 +97,7 @@ final class VideoCell: UICollectionViewCell {
     
     private func bind() {
         likeButton.publisher(for: .touchUpInside)
-            .throttle(for: .seconds(5), scheduler: RunLoop.main, latest: false)
+            .throttle(for: .milliseconds(500), scheduler: RunLoop.main, latest: false)
             .sink { [weak self] _ in
                 self?.onLikeTapped?()
             }
