@@ -14,28 +14,62 @@ final class MyVideoViewModel {
         let title: String
         let thumbnailURL: URL?
     }
-
-    private var histories: [HistoryItem] = []
-    private var recommendedVideos: [VideoListViewModel.Item] = []
     
-    //TODO: 서정원 - String -> Image 타입으로 변경하는 메서드가 필요함
-    let demoHistories = [
-        HistoryItem(title: "오늘의 하이라이트1오늘의 하이라이트1오늘의 하이라이트1오늘의 하이라이트1오늘의 하이라이트1오늘의 하이라이트1오늘의 하이라이트1오늘의 하이라이트1오늘의 하이라이트1", thumbnailURL: nil),
-        HistoryItem(title: "오늘의 하이라이트2", thumbnailURL: nil),
-        HistoryItem(title: "오늘의 하이라이트3", thumbnailURL: nil),
-        HistoryItem(title: "오늘의 하이라이트4", thumbnailURL: nil),
-        HistoryItem(title: "오늘의 하이라이트5", thumbnailURL: nil),
-        HistoryItem(title: "오늘의 하이라이트6", thumbnailURL: nil),
-        HistoryItem(title: "오늘의 하이라이트7", thumbnailURL: nil),
-        HistoryItem(title: "오늘의 하이라이트8", thumbnailURL: nil),
-    ]
+    @Published private(set) var historyVideoModel: [HistoryItem] = []
+    @Published private(set) var likedVideoModel: [Video] = []
     
-    let demoRecommendedVideos = [
-        VideoListViewModel.Item(title: "asd1", description: "asd", thumbnailImageURL: nil, isLiked: false, categories: []),
-        VideoListViewModel.Item(title: "asd2", description: "asd", thumbnailImageURL: nil, isLiked: false, categories: []),
-        VideoListViewModel.Item(title: "asd3", description: "asd", thumbnailImageURL: nil, isLiked: false, categories: []),
-        VideoListViewModel.Item(title: "asd4", description: "asd", thumbnailImageURL: nil, isLiked: false, categories: []),
-        VideoListViewModel.Item(title: "asd5", description: "asd", thumbnailImageURL: nil, isLiked: false, categories: []),
-        VideoListViewModel.Item(title: "asd6", description: "asd", thumbnailImageURL: nil, isLiked: false, categories: [])
-    ]
+    func fetchMyVideoModel() throws {
+        historyVideoModel = [
+            HistoryItem(
+                title: "오늘의 하이라이트: SwiftUI 기초 튜토리얼",
+                thumbnailURL: URL(string: "https://picsum.photos/id/1011/200/120")
+            ),
+            HistoryItem(
+                title: "iOS Combine 실습 예제",
+                thumbnailURL: URL(string: "https://picsum.photos/id/1012/200/120")
+            ),
+            HistoryItem(
+                title: "MVVM 패턴으로 앱 구조 잡기",
+                thumbnailURL: URL(string: "https://picsum.photos/id/1013/200/120")
+            ),
+            HistoryItem(
+                title: "UICollectionView Compositional Layout 배우기",
+                thumbnailURL: URL(string: "https://picsum.photos/id/1014/200/120")
+            ),
+            HistoryItem(
+                title: "AVPlayer로 비디오 스트리밍 테스트",
+                thumbnailURL: URL(string: "https://picsum.photos/id/1015/200/120")
+            ),
+            HistoryItem(
+                title: "Swift Enum과 DiffableDataSource 활용",
+                thumbnailURL: URL(string: "https://picsum.photos/id/1016/200/120")
+            ),
+            HistoryItem(
+                title: "앱 성능 최적화 전략",
+                thumbnailURL: URL(string: "https://picsum.photos/id/1017/200/120")
+            ),
+            HistoryItem(
+                title: "실전 iOS 프로젝트 구조 예시",
+                thumbnailURL: URL(string: "https://picsum.photos/id/1018/200/120")
+            ),
+        ]
+        
+        let request = Video.fetchRequest()
+        request.sortDescriptors = [NSSortDescriptor(key: "createdAt", ascending: true)]
+        request.predicate = NSPredicate(format: "isLiked == %@", NSNumber(value: true))
+        
+        let likedVideos = try PersistenceManager.shared.fetch(request: request)
+        likedVideoModel = likedVideos
+        
+    }
+    
+    func cancelLike(at video: Video) throws {
+        guard let selectedIndex = likedVideoModel.firstIndex(where: { $0.id == video.id }) else { return }
+        
+        try PersistenceManager.shared.updateVideo(videoID: video.id) { video in
+            video.isLiked = false
+        }
+        
+        likedVideoModel[selectedIndex].isLiked = false
+    }
 }

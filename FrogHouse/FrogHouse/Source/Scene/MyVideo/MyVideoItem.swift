@@ -9,5 +9,5 @@ import Foundation
 
 enum MyVideoItem: Hashable {
     case history(MyVideoViewModel.HistoryItem)
-    case like(VideoListViewModel.Item)
+    case like(Video)
 }

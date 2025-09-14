@@ -8,6 +8,15 @@
 import UIKit
 
 final class HistoryCardCell: UICollectionViewCell {
+    private let containerStackView: UIStackView = {
+        let stackView = UIStackView()
+        stackView.backgroundColor = .clear
+        stackView.axis = .vertical
+        stackView.distribution = .fill
+        stackView.alignment = .fill
+        return stackView
+    }()
+    
     private let thumbnailImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFill
@@ -20,30 +29,14 @@ final class HistoryCardCell: UICollectionViewCell {
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.FH.title(size: 14)
-        label.numberOfLines = 2
+        label.numberOfLines = 1
+        label.lineBreakMode = .byTruncatingTail
         return label
     }()
     
     override init(frame: CGRect) {
         super.init(frame: frame)
-        contentView.backgroundColor = .secondarySystemBackground
-        contentView.layer.cornerRadius = 8
-        contentView.layer.masksToBounds = true
-        
-        contentView.addSubview(thumbnailImageView)
-        contentView.addSubview(titleLabel)
-        
-        thumbnailImageView.anchor
-            .top(contentView.topAnchor, offset: 8)
-            .leading(contentView.leadingAnchor, offset: 8)
-            .trailing(contentView.trailingAnchor, offset: 8)
-        thumbnailImageView.heightAnchor.constraint(equalTo: contentView.heightAnchor, multiplier: 9.0 / 16.0).isActive = true
-        
-        titleLabel.anchor
-            .top(thumbnailImageView.bottomAnchor, offset: 8)
-            .leading(contentView.leadingAnchor, offset: 8)
-            .trailing(contentView.trailingAnchor, offset: 8)
-            .bottom(contentView.bottomAnchor, offset: 8)
+        configureUI()
     }
     
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
@@ -54,12 +47,22 @@ final class HistoryCardCell: UICollectionViewCell {
         titleLabel.text = nil
     }
     
-    func configure(with model: MyVideoViewModel.HistoryItem) {
-        titleLabel.text = model.title
+    private func configureUI() {
+        contentView.layer.cornerRadius = 8
+        contentView.layer.masksToBounds = true
+        
+        contentView.addSubview(containerStackView)
+        [thumbnailImageView, titleLabel].forEach { containerStackView.addArrangedSubview($0) }
+        
+        containerStackView.pinToSuperview()
+    }
+}
+
+extension HistoryCardCell {
+    func configureUI(title: String, thumbnailImageURL: URL?) {
+        titleLabel.text = title
         
         let placeholder = UIImage(systemName: "photo.fill")
-        thumbnailImageView.kf.setImage(with: model.thumbnailURL,
-                                       placeholder: placeholder,
-                                       options: [.transition(.fade(0.2))])
+        thumbnailImageView.kf.setImage(with: thumbnailImageURL, placeholder: placeholder)
     }
 }
