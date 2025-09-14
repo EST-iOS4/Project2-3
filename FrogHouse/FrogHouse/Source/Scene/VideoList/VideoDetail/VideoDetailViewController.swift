@@ -81,6 +81,13 @@ final class VideoDetailViewController: BaseViewController<VideoDetailViewModel> 
         return label
     }()
     
+    private let indicatorView: UIActivityIndicatorView = {
+        let indicator = UIActivityIndicatorView()
+        indicator.style = .large
+        indicator.tintColor = .FH.signatureGreen.color
+        indicator.startAnimating()
+        return indicator
+    }()
     
     private lazy var singleTapGesture: UITapGestureRecognizer = {
         let gesture = UITapGestureRecognizer(target: self, action: #selector(didTappedVideoScreen))
@@ -134,7 +141,7 @@ final class VideoDetailViewController: BaseViewController<VideoDetailViewModel> 
         view.addSubview(scrollView)
         scrollView.addSubview(containerStackView)
         [playerContainerView, playerControlsView, titleLabel, descriptionLabel, videoTagsView, statisticsLabel].forEach { containerStackView.addArrangedSubview($0) }
-        playerContainerView.addSubview(feedbackLabel)
+        [feedbackLabel, indicatorView].forEach { playerContainerView.addSubview($0) }
     }
     
     override func setupConstraints() {
@@ -149,6 +156,8 @@ final class VideoDetailViewController: BaseViewController<VideoDetailViewModel> 
         feedbackLabel.anchor
             .centerX(playerContainerView.centerXAnchor)
             .centerY(playerContainerView.centerYAnchor)
+        
+        indicatorView.pinToSuperview()
     }
     
     override func setupUI() {
@@ -160,6 +169,11 @@ final class VideoDetailViewController: BaseViewController<VideoDetailViewModel> 
     // MARK: - Binding
     override func bind() {
         super.bind()
+        do {
+            try viewModel.fetchVideo()
+        } catch {
+            showSnackBar(type: .fetchVideo(false))
+        }
         
         viewModel.$startTime
             .receive(on: RunLoop.main)
@@ -189,6 +203,17 @@ final class VideoDetailViewController: BaseViewController<VideoDetailViewModel> 
             }
             .store(in: &cancellables)
         
+        viewModel.$isLoading
+            .receive(on: RunLoop.main)
+            .sink { [weak self] isLoading in
+                if isLoading {
+                    self?.indicatorView.startAnimating()
+                } else {
+                    self?.indicatorView.stopAnimating()
+                }
+            }
+            .store(in: &cancellables)
+        
         viewModel.$currentSpeed
             .receive(on: RunLoop.main)
             .sink { [weak self] speed in
@@ -209,11 +234,11 @@ final class VideoDetailViewController: BaseViewController<VideoDetailViewModel> 
             .sink { [weak self] item in
                 self?.titleLabel.text = item.title
                 self?.descriptionLabel.text = item.descriptionText
-                self?.videoTagsView.setTags(item.videoCategories.map { $0.title })
+                self?.videoTagsView.setTags(item.categories.map { $0.title })
                 
                 let likeText = item.isLiked ? "❤️" : "♡"
                 let createdDate = item.createdAt.formatted(.dateTime.month().day())
-                let viewText = "조회수: \(item.statistics.viewCount)"
+                let viewText = "조회수: \(item.viewCount)"
                 self?.statisticsLabel.text = "\(likeText) • \(viewText) • 생성일: \(createdDate)"
             }
             .store(in: &cancellables)

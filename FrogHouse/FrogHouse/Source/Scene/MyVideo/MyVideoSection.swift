@@ -9,5 +9,5 @@ import Foundation
 
 enum MyVideoSection: Int, CaseIterable {
     case history
-    case recommend
+    case like
 }

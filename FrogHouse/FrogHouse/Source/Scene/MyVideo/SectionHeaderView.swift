@@ -21,40 +21,43 @@ final class SectionHeaderView: UICollectionReusableView {
     
     override init(frame: CGRect) {
         super.init(frame: frame)
-        
-        addSubview(container)
-        container.addSubview(titleLabel)
-        container.addSubview(actionButton)
-        
-        container.anchor
-            .top(topAnchor)
-            .leading(leadingAnchor, offset: 16)
-            .trailing(trailingAnchor, offset: 16)
-            .bottom(bottomAnchor)
-        
-        titleLabel.font = .systemFont(ofSize: 20, weight: .bold)
-        titleLabel.anchor
-            .top(container.topAnchor, offset: 8)
-            .leading(container.leadingAnchor)
-            .bottom(container.bottomAnchor, offset: 8)
-        
-        actionButton.titleLabel?.font = .systemFont(ofSize: 15, weight: .semibold)
-        actionButton.setContentHuggingPriority(.required, for: .horizontal)
-        actionButton.anchor
-            .centerY(titleLabel.centerYAnchor)
-            .trailing(container.trailingAnchor)
-        
-        actionButton.addTarget(self, action: #selector(tapAction), for: .touchUpInside)
+        configureUI()
     }
     
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
     
-    func setTrailingActionTitle(_ title: String?, handler: (() -> Void)?) {
-        actionButton.setTitle(title, for: .normal)
-        actionButton.isHidden = (title == nil)
-        actionHandler = handler
+    private func configureUI() {
+        addSubview(container)
+        container.addSubview(titleLabel)
+        container.addSubview(actionButton)
+        
+        container.pinToSuperview()
+        
+        titleLabel.font = .systemFont(ofSize: 20, weight: .bold)
+        titleLabel.textAlignment = .left
+        titleLabel.anchor
+            .top(container.topAnchor)
+            .leading(container.leadingAnchor)
+            .bottom(container.bottomAnchor)
+        
+        actionButton.titleLabel?.font = .systemFont(ofSize: 15, weight: .semibold)
+        
+        actionButton.anchor
+            .top(container.topAnchor)
+            .trailing(container.trailingAnchor)
+            .bottom(container.bottomAnchor)
+            .leading(titleLabel.trailingAnchor)
+        
+        actionButton.addTarget(self, action: #selector(tapAction), for: .touchUpInside)
     }
     
     @objc private func tapAction() { actionHandler?() }
 }
 
+extension SectionHeaderView {
+    func setTrailingActionTitle(_ title: String?, handler: (() -> Void)?) {
+        actionButton.setTitle(title, for: .normal)
+        actionButton.isHidden = (title == nil)
+        actionHandler = handler
+    }
+}

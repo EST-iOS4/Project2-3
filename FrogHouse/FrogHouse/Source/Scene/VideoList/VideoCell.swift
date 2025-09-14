@@ -5,6 +5,7 @@
 //  Created by SJS on 9/5/25.
 //
 
+import Combine
 import UIKit
 
 import Kingfisher
@@ -12,6 +13,7 @@ import Kingfisher
 final class VideoCell: UICollectionViewCell {
     static let reuseIdentifier = String(describing: VideoCell.self)
     
+    private var cancellables = Set<AnyCancellable>()
     var onLikeTapped: (() -> Void)?
     
     private let thumbnailImageView: UIImageView = {
@@ -19,7 +21,7 @@ final class VideoCell: UICollectionViewCell {
         imageView.contentMode = .scaleAspectFill
         imageView.clipsToBounds = true
         imageView.layer.cornerRadius = 8
-        imageView.backgroundColor = UIColor.FH.backgroundBase.color // TODO: 송지석 (색상 추후 교체)
+        imageView.backgroundColor = UIColor.FH.backgroundBase.color
         imageView.image = UIImage(systemName: "video")
         return imageView
     }()
@@ -27,7 +29,7 @@ final class VideoCell: UICollectionViewCell {
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.FH.title(size: 20)
-        label.textColor = UIColor.FH.primary.color // TODO: 송지석 (색상 추후 교체)
+        label.textColor = UIColor.FH.primary.color
         label.numberOfLines = 1
         label.lineBreakMode = .byTruncatingTail
         return label
@@ -36,7 +38,7 @@ final class VideoCell: UICollectionViewCell {
     private let descriptionLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.FH.body(size: 15)
-        label.textColor = UIColor.FH.secondary.color // TODO: 송지석 (색상 추후 교체)
+        label.textColor = UIColor.FH.secondary.color
         label.numberOfLines = 2
         label.lineBreakMode = .byTruncatingTail
         return label
@@ -44,7 +46,6 @@ final class VideoCell: UICollectionViewCell {
     
     private let likeButton: UIButton = {
         let button = UIButton(type: .system)
-        button.addTarget(self, action: #selector(didTapLike), for: .touchUpInside)
         button.setContentCompressionResistancePriority(.required, for: .horizontal)
         return button
     }()
@@ -53,6 +54,7 @@ final class VideoCell: UICollectionViewCell {
         super.init(frame: frame)
         setupUI()
         setupConstraints()
+        bind()
     }
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
     
@@ -64,7 +66,6 @@ final class VideoCell: UICollectionViewCell {
     }
     
     private func setupUI() {
-        // TODO: 송지석 (색상 추후 교체)
         backgroundColor = .clear
         contentView.backgroundColor =  UIColor.FH.backgroundBase.color
         
@@ -94,7 +95,14 @@ final class VideoCell: UICollectionViewCell {
             .trailing(contentView.trailingAnchor)
     }
     
-    @objc private func didTapLike() { onLikeTapped?() }
+    private func bind() {
+        likeButton.publisher(for: .touchUpInside)
+            .throttle(for: .seconds(5), scheduler: RunLoop.main, latest: false)
+            .sink { [weak self] _ in
+                self?.onLikeTapped?()
+            }
+            .store(in: &cancellables)
+    }
 }
 
 // MARK: - Configure Cell
@@ -113,7 +121,7 @@ extension VideoCell {
     
     func updateState(_ liked: Bool) {
         let buttonImage = UIImage(systemName: liked ? "heart.fill" : "heart")
-        let buttonColor: UIColor = liked ? UIColor.FH.emphasis.color :  UIColor.FH.primary.color  // TODO: - 송지석 (색상 추후 교체)
+        let buttonColor: UIColor = liked ? UIColor.FH.emphasis.color :  UIColor.FH.primary.color  
 
         likeButton.setImage(buttonImage, for: .normal)
         likeButton.tintColor = buttonColor
