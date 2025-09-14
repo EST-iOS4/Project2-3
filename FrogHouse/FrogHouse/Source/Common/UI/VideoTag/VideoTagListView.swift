@@ -7,91 +7,72 @@
 
 import UIKit
 
-// MARK: Jay - 여러 태그셀을 2줄로 쌓아주는 컬렉션뷰 >> 2줄 넘어가면 안보이게 처리 예정
-final class VideoTagListView: UIView, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
+// MARK: Jay - 여러 태그셀을 2줄로 쌓아주는 컬렉션뷰 (2줄 넘어가면 잘림)
+final class VideoTagListView: UIView, UICollectionViewDataSource {
     
+    // MARK: Jay - 화면에 표시할 태그 배열
     private var tags: [String] = []
     
-    private let interitemSpacing: CGFloat = 6
-    private let lineSpacing: CGFloat = 6
-    
-    // MARK: Jay - UI
-    private let collectionView: UICollectionView = {
+    private let collectionView: AutoSizingCollectionView = {
         let layout = UICollectionViewFlowLayout()
+        // MARK: Jay - 세로 방향으로 줄을 쌓음
         layout.scrollDirection = .vertical
-        layout.minimumInteritemSpacing = 6
-        layout.minimumLineSpacing = 6
+        // MARK: Jay - 셀 크기 자동 계산
         layout.estimatedItemSize = UICollectionViewFlowLayout.automaticSize
-        let cv = UICollectionView(frame: .zero, collectionViewLayout: layout)
+        layout.minimumLineSpacing = 6
+        let cv = AutoSizingCollectionView(frame: .zero, collectionViewLayout: layout)
+        // MARK: Jay - 기본은 스크롤 가능 (실제 여부는 setTags에서 결정)
+        cv.isScrollEnabled = true
+        cv.alwaysBounceVertical = true
+        cv.showsVerticalScrollIndicator = true
         cv.backgroundColor = .clear
-        cv.isScrollEnabled = false
-        cv.contentInset = .zero
-        cv.register(VideoTagCell.self, forCellWithReuseIdentifier: VideoTagCell.reuseID)
+        cv.register(VideoTagCell.self,
+                    forCellWithReuseIdentifier: VideoTagCell.reuseID)
         return cv
     }()
     
-    // MARK: Jay - 높이 제약 조건(처음에는 0, 이후 updateHeight에서 갱신)
+    // MARK: Jay - 높이 2줄로 제한 (뷰 자체 높이를 고정)
     private var heightConstraint: NSLayoutConstraint?
     
+    // MARK: Jay - 초기화
     override init(frame: CGRect) {
         super.init(frame: frame)
+        
+        // 컬렉션뷰 추가 및 오토레이아웃 설정
         addSubview(collectionView)
         collectionView.dataSource = self
-        collectionView.delegate = self
         collectionView.pinToSuperview()
         
-        heightConstraint = heightAnchor.constraint(equalToConstant: 0)
-        heightConstraint?.priority = .required
+        // MARK: Jay - 2줄 높이 계산: 한줄 × 4 + 줄 간격(6)
+        let h = (VideoTagCell.singleLineHeightForCurrentStyle() * 4) + 6
+        heightConstraint = heightAnchor.constraint(equalToConstant: h)
         heightConstraint?.isActive = true
     }
+    
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
     
-    // MARK: Jay - 높이 제약 조건에 맞게 높이 갱신
-    private func updateHeight() {
-        let contentHeight = collectionView.collectionViewLayout.collectionViewContentSize.height
-        let singleLineHeight = VideoTagCell.singleLineHeightForCurrentStyle()
-        let minTwoLineHeight = (singleLineHeight * 2) + lineSpacing
-        let target = max(ceil(contentHeight), ceil(minTwoLineHeight))
-        heightConstraint?.constant = target
-        layoutIfNeeded()
-    }
-    
-    // MARK: Jay - 레이아웃 갱신
-    override func layoutSubviews() {
-        super.layoutSubviews()
-        (collectionView.collectionViewLayout as? UICollectionViewFlowLayout)?.invalidateLayout()
-        updateHeight()
-    }
-    
-    // MARK: Jay - 외부에서 태그 받아서 설정
+    // MARK: Jay - 태그 배열 세팅
     func setTags(_ tags: [String]) {
         self.tags = tags
         collectionView.reloadData()
+        
+        // MARK: Jay - 2줄 이하일 경우 스크롤 비활성화
         DispatchQueue.main.async { [weak self] in
-            self?.updateHeight()
+            guard let self = self else { return }
+            // 콘텐츠 높이가 뷰 높이(2줄 높이) 이하인지 확인
+            let contentHeight = self.collectionView.collectionViewLayout.collectionViewContentSize.height
+            let viewHeight = self.bounds.height
+            self.collectionView.isScrollEnabled = contentHeight > viewHeight
         }
     }
     
-    // MARK: Jay - 태그 배열만큼 셀을만듦
-    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+    func collectionView(_ c: UICollectionView, numberOfItemsInSection s: Int) -> Int {
         return tags.count
     }
     
-    func collectionView(_ collectionView: UICollectionView,
-                        cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        guard let cell = collectionView.dequeueReusableCell(
-            withReuseIdentifier: VideoTagCell.reuseID, for: indexPath
-        ) as? VideoTagCell else {
-            return UICollectionViewCell()
-        }
-        cell.configure(text: "#\(tags[indexPath.item])")
+    func collectionView(_ c: UICollectionView, cellForItemAt i: IndexPath) -> UICollectionViewCell {
+        let cell = c.dequeueReusableCell(withReuseIdentifier: VideoTagCell.reuseID, for: i) as! VideoTagCell
+        cell.configure(text: "#\(tags[i.item])")
         return cell
-    }
-    
-    // MARK: Jay - 컬렉션뷰 섹션의 패딩을 0으로 설정
-    func collectionView(_ collectionView: UICollectionView,
-                        layout collectionViewLayout: UICollectionViewLayout,
-                        insetForSectionAt section: Int) -> UIEdgeInsets {
-        UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
     }
 }
