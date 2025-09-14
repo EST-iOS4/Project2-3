@@ -116,14 +116,14 @@ final class RecommendedVideoCarouselCell: UICollectionViewCell {
         overlayPlayButtonContainer.anchor
             .centerX(videoImageThumbnailView.centerXAnchor)
             .centerY(videoImageThumbnailView.centerYAnchor)
-            .width(56)
-            .height(56)
+            .width(80)
+            .height(80)
 
         videoPlayButton.anchor
             .centerX(overlayPlayButtonContainer.centerXAnchor)
             .centerY(overlayPlayButtonContainer.centerYAnchor)
-            .width(22)
-            .height(22)
+            .width(40)
+            .height(40)
 
         overlayTextLabelContainer.anchor
             .leading(videoImageThumbnailView.leadingAnchor, offset: 8)
