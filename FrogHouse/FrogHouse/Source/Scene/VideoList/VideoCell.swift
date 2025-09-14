@@ -5,6 +5,7 @@
 //  Created by SJS on 9/5/25.
 //
 
+import Combine
 import UIKit
 
 import Kingfisher
@@ -12,6 +13,7 @@ import Kingfisher
 final class VideoCell: UICollectionViewCell {
     static let reuseIdentifier = String(describing: VideoCell.self)
     
+    private var cancellables = Set<AnyCancellable>()
     var onLikeTapped: (() -> Void)?
     
     private let thumbnailImageView: UIImageView = {
@@ -44,7 +46,6 @@ final class VideoCell: UICollectionViewCell {
     
     private let likeButton: UIButton = {
         let button = UIButton(type: .system)
-        button.addTarget(self, action: #selector(didTapLike), for: .touchUpInside)
         button.setContentCompressionResistancePriority(.required, for: .horizontal)
         return button
     }()
@@ -53,6 +54,7 @@ final class VideoCell: UICollectionViewCell {
         super.init(frame: frame)
         setupUI()
         setupConstraints()
+        bind()
     }
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
     
@@ -93,7 +95,14 @@ final class VideoCell: UICollectionViewCell {
             .trailing(contentView.trailingAnchor)
     }
     
-    @objc private func didTapLike() { onLikeTapped?() }
+    private func bind() {
+        likeButton.publisher(for: .touchUpInside)
+            .throttle(for: .seconds(5), scheduler: RunLoop.main, latest: false)
+            .sink { [weak self] _ in
+                self?.onLikeTapped?()
+            }
+            .store(in: &cancellables)
+    }
 }
 
 // MARK: - Configure Cell

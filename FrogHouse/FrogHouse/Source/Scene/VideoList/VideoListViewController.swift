@@ -12,7 +12,7 @@ final class VideoListViewController: BaseViewController<VideoListViewModel> {
         case main
     }
     private var categoryActions: [UIAction] = []
-    private var dataSource: UICollectionViewDiffableDataSource<Section, Video>!
+    private var dataSource: UICollectionViewDiffableDataSource<Section, VideoListViewModel.VideoListItem>!
     
     private let scrollView: UIScrollView = {
         let scrollView = UIScrollView()
@@ -103,11 +103,13 @@ final class VideoListViewController: BaseViewController<VideoListViewModel> {
     }
     
     override func bind() {
+        super.bind()
         setupDataSource()
         
         viewModel.$videoList
             .receive(on: RunLoop.main)
             .sink { [weak self] videoItems in
+                print("데이터: \(videoItems.map { ($0.title, $0.isLiked) })")
                 self?.emptyView.isHidden = !videoItems.isEmpty
                 self?.applySnapshot(videoItems: videoItems)
                 
@@ -156,7 +158,7 @@ final class VideoListViewController: BaseViewController<VideoListViewModel> {
 // MARK: - Setup DataSource
 extension VideoListViewController {
     private func setupDataSource() {
-        dataSource = UICollectionViewDiffableDataSource<Section, Video>(collectionView: videoCollectionView) { collectionView, indexPath, videoItem in
+        dataSource = UICollectionViewDiffableDataSource<Section, VideoListViewModel.VideoListItem>(collectionView: videoCollectionView) { collectionView, indexPath, videoItem in
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: VideoCell.reuseIdentifier, for: indexPath) as? VideoCell ?? VideoCell()
             cell.configure(
                 title: videoItem.title,
@@ -172,17 +174,17 @@ extension VideoListViewController {
                 do {
                     try self.viewModel.toggleLike(at: item)
                     cell.updateState(item.isLiked)
-                    showSnackBar(type: item.isLiked ? .updateLikedState(true) : .updateUnLikedState(true))
+                    showSnackBar(type: item.isLiked ? .updateUnLikedState(true) : .updateLikedState(true))
                 } catch {
-                    showSnackBar(type: item.isLiked ? .updateLikedState(false) : .updateUnLikedState(false))
+                    showSnackBar(type: item.isLiked ? .updateUnLikedState(false) : .updateLikedState(false))
                 }
             }
             return cell
         }
     }
     
-    func applySnapshot(videoItems: [Video]) {
-        var snapshot = NSDiffableDataSourceSnapshot<Section, Video>()
+    func applySnapshot(videoItems: [VideoListViewModel.VideoListItem]) {
+        var snapshot = NSDiffableDataSourceSnapshot<Section, VideoListViewModel.VideoListItem>()
         snapshot.appendSections([.main])
         snapshot.appendItems(videoItems)
         dataSource.apply(snapshot, animatingDifferences: true)
@@ -193,7 +195,7 @@ extension VideoListViewController {
 extension VideoListViewController: UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         guard let item = dataSource.itemIdentifier(for: indexPath) else { return }
-        let vc = VideoDetailViewController(viewModel: VideoDetailViewModel(video: item))
+        let vc = VideoDetailViewController(viewModel: VideoDetailViewModel(id: item.id))
         navigationController?.pushViewController(vc, animated: true)
     }
     
