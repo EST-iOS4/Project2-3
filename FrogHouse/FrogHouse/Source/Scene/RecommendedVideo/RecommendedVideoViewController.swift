@@ -6,6 +6,8 @@
 //
 
 import UIKit
+import FirebaseCore
+import FirebaseFirestore
 
 final class RecommendedVideoViewController: BaseViewController<RecommendedVideoViewModel> {
     
@@ -74,11 +76,36 @@ final class RecommendedVideoViewController: BaseViewController<RecommendedVideoV
             .leading(safeArea.leadingAnchor, offset: 20)
             .trailing(safeArea.trailingAnchor, offset: 20)
     }
+
+    // MARK: Jay - 파이어베이스테스트중
+    func debugPrintWithDocIDs() {
+        print("🤖 called debugPrintWithDocIDs")
+        Task {
+            do {
+                let db = Firestore.firestore()
+                let qs = try await db.collection("VideoList")
+                    .order(by: "viewCount", descending: true)
+                    .limit(to: 20)
+                    .getDocuments()
+
+                print("📦 count =", qs.documents.count, "isFromCache =", qs.metadata.isFromCache)
+                for doc in qs.documents {
+                    print("====== \(doc.documentID) ======")
+                    print(doc.data())
+                }
+            } catch {
+                print("❌ Firestore error:", error)
+            }
+        }
+    }
+
     
     // MARK: Jay - Core Data에서 Statistics.viewCount DESC 로 로드
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         viewModel.load()
+        // MARK: Jay - 파이어베이스테스트중 (디버그로그)
+        debugPrintWithDocIDs()
     }
     
     // MARK: Jay - LifeCycle에 맞게 오토슬라이드 설정
