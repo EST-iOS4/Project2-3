@@ -11,6 +11,7 @@ final class VideoProgressView: UIView {
     let volumeSlider: UISlider = {
         let slider = UISlider()
         slider.value = 0.0
+        slider.minimumTrackTintColor = UIColor.FH.signatureGreen.color
         return slider
     }()
     
