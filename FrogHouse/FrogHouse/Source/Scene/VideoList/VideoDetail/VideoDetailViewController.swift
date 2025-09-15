@@ -282,12 +282,14 @@ final class VideoDetailViewController: BaseViewController<VideoDetailViewModel> 
     @objc
     private func didDoubleTapLeft() {
         viewModel.seekBackward()
+        HapticManager.shared.hapticImpact(style: .rigid)
         showFeedback("⏪ 10")
     }
     
     @objc
     private func didDoubleTapRight() {
         viewModel.seekForward()
+        HapticManager.shared.hapticImpact(style: .rigid)
         showFeedback("10 ⏩")
     }
 }
