@@ -40,6 +40,7 @@ final class RecommendedVideoViewController: BaseViewController<RecommendedVideoV
     
     override func setupUI() {
         navigationItem.title = "TOP 10 – 오늘 뭐 봐?"
+        navigationController?.navigationBar.tintColor = UIColor.FH.primary.color
         videoCarouselView.backgroundColor = .clear
         videoTagsView.backgroundColor = .clear
         // MARK: Jay - 캐러셀 페이지 변경시 → VM 인덱스 반영
