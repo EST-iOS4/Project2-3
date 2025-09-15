@@ -36,6 +36,7 @@ final class MyVideoViewController: BaseViewController<MyVideoViewModel> {
     override func setupUI() {
         super.setupUI()
         navigationItem.title = "나만의 비디오"
+        navigationController?.navigationBar.tintColor = UIColor.FH.primary.color
         setupDataSource()
     }
     
