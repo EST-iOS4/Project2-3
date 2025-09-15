@@ -99,6 +99,7 @@ final class VideoCell: UICollectionViewCell {
         likeButton.publisher(for: .touchUpInside)
             .throttle(for: .milliseconds(500), scheduler: RunLoop.main, latest: false)
             .sink { [weak self] _ in
+                HapticManager.shared.hapticImpact(style: .light)
                 self?.onLikeTapped?()
             }
             .store(in: &cancellables)
