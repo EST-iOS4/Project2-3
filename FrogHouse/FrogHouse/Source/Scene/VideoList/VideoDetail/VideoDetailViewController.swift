@@ -72,13 +72,12 @@ final class VideoDetailViewController: BaseViewController<VideoDetailViewModel> 
         return label
     }()
     
-    private let feedbackLabel: UILabel = {
-        let label = UILabel()
-        label.font = .boldSystemFont(ofSize: 40)
-        label.textColor = .white
-        label.textAlignment = .center
-        label.alpha = 0
-        return label
+    private let feedbackImageView: UIImageView = {
+        let imageView = UIImageView()
+        imageView.contentMode = .scaleAspectFit
+        imageView.tintColor = .white
+        imageView.alpha = 0
+        return imageView
     }()
     
     private let indicatorView: UIActivityIndicatorView = {
@@ -141,7 +140,7 @@ final class VideoDetailViewController: BaseViewController<VideoDetailViewModel> 
         view.addSubview(scrollView)
         scrollView.addSubview(containerStackView)
         [playerContainerView, playerControlsView, titleLabel, descriptionLabel, videoTagsView, statisticsLabel].forEach { containerStackView.addArrangedSubview($0) }
-        [feedbackLabel, indicatorView].forEach { playerContainerView.addSubview($0) }
+        [feedbackImageView, indicatorView].forEach { playerContainerView.addSubview($0) }
     }
     
     override func setupConstraints() {
@@ -151,11 +150,12 @@ final class VideoDetailViewController: BaseViewController<VideoDetailViewModel> 
         containerStackView.pinToSuperview().anchor
             .width(scrollView.widthAnchor)
         
-        playerContainerView.heightAnchor.constraint(equalTo: playerContainerView.widthAnchor, multiplier: 9.0/16.0).isActive = true
+        playerContainerView.anchor.height(250)
         containerStackView.setCustomSpacing(.zero, after: playerContainerView)
-        feedbackLabel.anchor
+        feedbackImageView.anchor
             .centerX(playerContainerView.centerXAnchor)
             .centerY(playerContainerView.centerYAnchor)
+            .size(width: 50, height: 50)
         
         indicatorView.pinToSuperview()
     }
@@ -257,18 +257,18 @@ final class VideoDetailViewController: BaseViewController<VideoDetailViewModel> 
         playerLayer = layer
     }
     
-    private func showFeedback(_ text: String) {
-        feedbackLabel.text = text
-        feedbackLabel.alpha = 0
-        feedbackLabel.transform = CGAffineTransform(scaleX: 0.5, y: 0.5)
+    private func showFeedback(_ image: UIImage?) {
+        feedbackImageView.image = image
+        feedbackImageView.alpha = 0
+        feedbackImageView.transform = CGAffineTransform(scaleX: 0.5, y: 0.5)
         
         UIView.animate(withDuration: 0.2, animations: {
-            self.feedbackLabel.alpha = 1
-            self.feedbackLabel.transform = .identity
+            self.feedbackImageView.alpha = 1
+            self.feedbackImageView.transform = .identity
         }) { _ in
             UIView.animate(withDuration: 0.3, delay: 0.3, options: [], animations: {
-                self.feedbackLabel.alpha = 0
-                self.feedbackLabel.transform = CGAffineTransform(scaleX: 1.2, y: 1.2)
+                self.feedbackImageView.alpha = 0
+                self.feedbackImageView.transform = CGAffineTransform(scaleX: 1.2, y: 1.2)
             }, completion: nil)
         }
     }
@@ -276,19 +276,19 @@ final class VideoDetailViewController: BaseViewController<VideoDetailViewModel> 
     @objc
     private func didTappedVideoScreen() {
         viewModel.toggleIsPlaying()
-        showFeedback(viewModel.isPlaying ? "▶️ 재생" : "⏸ 정지")
+        showFeedback(viewModel.isPlaying ? UIImage(systemName: "play.fill") : UIImage(systemName: "pause"))
     }
     
     @objc
     private func didDoubleTapLeft() {
         viewModel.seekBackward()
-        showFeedback("⏪ 10")
+        showFeedback(UIImage(systemName: "gobackward.10"))
     }
     
     @objc
     private func didDoubleTapRight() {
         viewModel.seekForward()
-        showFeedback("10 ⏩")
+        showFeedback(UIImage(systemName: "goforward.10"))
     }
 }
 
