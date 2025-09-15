@@ -6,8 +6,6 @@
 //
 
 import UIKit
-import FirebaseCore
-import FirebaseFirestore
 
 // MARK: Jay - 추천 비디오 화면 (BaseViewController 제네릭 기반)
 final class RecommendedVideoViewController: BaseViewController<RecommendedVideoViewModel> {
