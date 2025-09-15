@@ -50,7 +50,7 @@ final class VideoDetailViewController: BaseViewController<VideoDetailViewModel> 
         let label = UILabel()
         label.font = .FH.amount(size: 22)
         label.numberOfLines = 2
-        label.textColor = .black
+        label.textColor = UIColor.FH.primary.color
         label.textAlignment = .center
         return label
     }()
@@ -59,7 +59,7 @@ final class VideoDetailViewController: BaseViewController<VideoDetailViewModel> 
         let label = UILabel()
         label.font = .FH.body(size: 16)
         label.numberOfLines = 0
-        label.textColor = .darkGray
+        label.textColor = UIColor.FH.secondary.color
         label.textAlignment = .center
         return label
     }()
@@ -67,7 +67,7 @@ final class VideoDetailViewController: BaseViewController<VideoDetailViewModel> 
     private let statisticsLabel: UILabel = {
         let label = UILabel()
         label.font = .FH.body(size: 14)
-        label.textColor = .gray
+        label.textColor = UIColor.FH.secondary.color
         label.textAlignment = .center
         return label
     }()
@@ -75,7 +75,7 @@ final class VideoDetailViewController: BaseViewController<VideoDetailViewModel> 
     private let feedbackLabel: UILabel = {
         let label = UILabel()
         label.font = .boldSystemFont(ofSize: 40)
-        label.textColor = .white
+        label.textColor = UIColor.FH.primary.color
         label.textAlignment = .center
         label.alpha = 0
         return label
