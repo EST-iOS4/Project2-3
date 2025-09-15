@@ -10,23 +10,36 @@ import Combine
 import Foundation
 
 final class VideoDetailViewModel: ObservableObject {
-    @Published private(set) var isPlaying: Bool = false
-    @Published private(set) var isMuted: Bool = false
-    @Published private(set) var currentSpeed: Float = 1.0
-    @Published private(set) var endTime: String = "0:00"
-    @Published private(set) var currentTimeRatio: Float = 0
+    struct VideoDetailItem {
+        let title: String
+        let descriptionText: String
+        let thumbnailURL: URL?
+        let viewCount: Int
+        let categories: [VideoCategory]
+        let createdAt: Date
+        var isLiked: Bool
+    }
     
+    private let id: UUID
     private let playManager: AVPlayManager
     private var cancellables = Set<AnyCancellable>()
     
-    init(videoURL: URL?, playManager: AVPlayManager = .shared) {
+    @Published private(set) var isPlaying: Bool = true
+    @Published private(set) var isMuted: Bool = false
+    @Published private(set) var isLoading: Bool = true
+    @Published private(set) var currentSpeed: Float = 1.0
+    @Published private(set) var startTime: String = "0:00"
+    @Published private(set) var endTime: String = "0:00"
+    @Published private(set) var currentTimeRatio: Float = 0
+    @Published private(set) var video: VideoDetailItem?
+    
+    init(id: UUID, playManager: AVPlayManager = .shared) {
         self.playManager = playManager
+        self.id = id
         
         bindManager()
         observeCurrentTime()
         observeDuration()
-        
-        playManager.loadVideo(url: videoURL)
     }
     
     func getPlayer() -> AVPlayer { playManager.getPlayer() }
@@ -36,28 +49,51 @@ final class VideoDetailViewModel: ObservableObject {
     func seekBackward() { playManager.seekBackward() }
     func seekForward() { playManager.seekForward() }
     func seek(to value: Float) { playManager.seek(to: value) }
+    func resetPlayer() { playManager.reset() }
+    func play() { playManager.play() }
+    
+    func fetchVideo() throws {
+        isLoading = true
+        let request = Video.fetchRequest()
+        request.predicate = NSPredicate(format: "id == %@", id as CVarArg)
+        let videoList = try PersistenceManager.shared.fetch(request: request)
+        guard let selectedVideo = videoList.first else { return }
+        playManager.loadVideo(url: selectedVideo.mp4URL)
+        
+        // MARK: - indicator 테스트용 딜레이 0.5초
+        DispatchQueue.global().asyncAfter(deadline: .now() + 0.5) {
+            self.video = .init(title: selectedVideo.title, descriptionText: selectedVideo.descriptionText, thumbnailURL: selectedVideo.thumbnailURL, viewCount: Int(selectedVideo.statistics.viewCount), categories: selectedVideo.videoCategories, createdAt: selectedVideo.createdAt, isLiked: selectedVideo.isLiked)
+            self.isLoading = false
+        }
+    }
     
     private func bindManager() {
         playManager.$isPlaying
-            .receive(on: RunLoop.main)
             .assign(to: &$isPlaying)
         
         playManager.$isMuted
-            .receive(on: RunLoop.main)
             .assign(to: &$isMuted)
         
         playManager.$currentSpeed
-            .receive(on: RunLoop.main)
             .assign(to: &$currentSpeed)
     }
     
     private func observeCurrentTime() {
-        playManager.$currentTime
+        let currentTimePublisher = playManager.$currentTime.share()
+        
+        currentTimePublisher
             .map { [weak self] currentTime -> Float in
                 guard let duration = self?.playManager.duration, duration > 0 else { return 0 }
                 return Float(currentTime / duration)
             }
             .assign(to: &$currentTimeRatio)
+        
+        currentTimePublisher
+            .map { currentTime -> String in
+                guard currentTime.isFinite else { return "0:00" }
+                return currentTime.formattedTime
+            }
+            .assign(to: &$startTime)
     }
     
     private func observeDuration() {

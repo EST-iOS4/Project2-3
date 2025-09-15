@@ -103,6 +103,15 @@ final class AVPlayManager {
         player.seek(to: CMTime(seconds: newTime, preferredTimescale: currentItem.currentTime().timescale))
     }
     
+    func reset() {
+        player.replaceCurrentItem(with: nil)
+        isPlaying = false
+        isMuted = false
+        currentSpeed = 1.0
+        currentTime = 0
+        duration = 0
+    }
+    
     // MARK: - Observers
     private func observeCurrentItemDuration() {
         player.publisher(for: \.currentItem)

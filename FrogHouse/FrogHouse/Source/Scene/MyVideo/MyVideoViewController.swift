@@ -6,27 +6,11 @@
 //
 
 import Combine
+import Kingfisher
 import UIKit
 
 final class MyVideoViewController: BaseViewController<MyVideoViewModel> {
-    private var histories: [HistoryItem] = []
-    private var recommendedVideos: [Video] = []
-    
-    //TODO: 서정원 - String -> Image 타입으로 변경하는 메서드가 필요함
-    let demoHistories = [
-        HistoryItem(title: "오늘의 하이라이트1", thumbnailURL: ""),
-        HistoryItem(title: "오늘의 하이라이트2", thumbnailURL: ""),
-        HistoryItem(title: "오늘의 하이라이트3", thumbnailURL: ""),
-        HistoryItem(title: "오늘의 하이라이트4", thumbnailURL: ""),
-        HistoryItem(title: "오늘의 하이라이트5", thumbnailURL: ""),
-        HistoryItem(title: "오늘의 하이라이트6", thumbnailURL: ""),
-        HistoryItem(title: "오늘의 하이라이트7", thumbnailURL: ""),
-        HistoryItem(title: "오늘의 하이라이트8", thumbnailURL: "")
-    ]
-    
-    let demoRecommendedVideos: [Video] = []
-    
-    private lazy var collectionView: UICollectionView = {
+    private lazy var myVideoCollectionView: UICollectionView = {
         let cv = UICollectionView(frame: .zero, collectionViewLayout: makeLayout())
         cv.backgroundColor = .clear
         cv.alwaysBounceVertical = true
@@ -34,15 +18,108 @@ final class MyVideoViewController: BaseViewController<MyVideoViewModel> {
         return cv
     }()
     
-    private lazy var dataSource: UICollectionViewDiffableDataSource<MyVideoSection, MyVideoItem> = {
-        let dataSource = UICollectionViewDiffableDataSource<MyVideoSection, MyVideoItem>(collectionView: self.collectionView) { [weak self] collectionView, indexPath,
-            item in
-            guard let self else { return UICollectionViewCell() }
+    private var dataSource: UICollectionViewDiffableDataSource<MyVideoSection, MyVideoItem>!
+    private var historyCellRegistration: UICollectionView.CellRegistration<HistoryCardCell,MyVideoViewModel.HistoryItem>!
+    private var likedVideoCellRegistration: UICollectionView.CellRegistration<VideoCell, Video>!
+    
+    private let headerRegistration: UICollectionView.SupplementaryRegistration<
+        SectionHeaderView> = {
+            UICollectionView.SupplementaryRegistration<SectionHeaderView>(
+                elementKind: UICollectionView.elementKindSectionHeader
+            ) { headerView,
+                _,
+                indexPath in
+                guard let section = MyVideoSection(rawValue: indexPath.section) else { return }
+                
+                switch section {
+                case .history:
+                    headerView.headerText = "시청 기록"
+                    //TODO: 서정원 - 모두 보기 기능의 경우 필수기능 구현 후 개발 예정
+                    headerView.setTrailingActionTitle("모두 보기", handler: { print("debug - 모두 보기") })
+                case .like:
+                    headerView.headerText = "좋아요 영상"
+                }
+            }
+        }()
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        do {
+            try viewModel.fetchMyVideoModel()
+        } catch {
+            showSnackBar(type: .fetchVideo(false))
+        }
+    }
+    
+    override func setupUI() {
+        super.setupUI()
+        navigationItem.title = "나만의 비디오"
+        setupDataSource()
+    }
+    
+    override func setupLayouts() {
+        super.setupLayouts()
+        view.addSubview(myVideoCollectionView)
+    }
+    
+    override func setupConstraints() {
+        super.setupConstraints()
+        myVideoCollectionView.pinToSuperview()
+    }
+    
+    override func bind() {
+        super.bind()
+        viewModel.$historyVideoModel
+            .receive(on: RunLoop.main)
+            .sink { [weak self] histories in
+                self?.applySnapshot(for: .history, items: histories.map { .history($0) })
+            }
+            .store(in: &cancellables)
+        
+        viewModel.$likedVideoModel
+            .receive(on: RunLoop.main)
+            .sink { [weak self] likes in
+                self?.applySnapshot(for: .like, items: likes.map { .like($0) })
+            }
+            .store(in: &cancellables)
+        
+    }
+    
+    private func setupDataSource() {
+        historyCellRegistration = UICollectionView.CellRegistration<HistoryCardCell, MyVideoViewModel.HistoryItem> { cell, _, model in
+            cell.configureUI(title: model.title, thumbnailImageURL: model.thumbnailURL)
+        }
+        
+        likedVideoCellRegistration = UICollectionView.CellRegistration<VideoCell, Video> { [weak self] cell, indexPath, item in
+            cell.configure(title: item.title, description: item.descriptionText, isLiked: item.isLiked, thumbnailImageURL: item.thumbnailURL)
+            
+            cell.onLikeTapped = { [weak self] in
+                guard let self,
+                      let selectedIndexPath = myVideoCollectionView.indexPath(for: cell),
+                      case .like(item) = self.dataSource.itemIdentifier(for: selectedIndexPath),
+                      item.isLiked else { return }
+                do {
+                    try self.viewModel.cancelLike(at: item)
+                    cell.updateState(item.isLiked)
+                    showSnackBar(type: .updateUnLikedState(true))
+                    
+                    let itemToDelete = MyVideoItem.like(item)
+                    var snapshot = self.dataSource.snapshot()
+                    snapshot.deleteItems([itemToDelete])
+                    self.dataSource.apply(snapshot, animatingDifferences: true)
+                } catch {
+                    showSnackBar(type: .updateUnLikedState(false))
+                }
+            }
+        }
+        
+        dataSource = UICollectionViewDiffableDataSource<MyVideoSection, MyVideoItem>(collectionView: self.myVideoCollectionView) { [weak self] collectionView, indexPath, item in
+            guard let self = self else { return UICollectionViewCell() }
             switch item {
             case .history(let model):
-                return collectionView.dequeueConfiguredReusableCell(using: self.historyRegistration, for: indexPath, item: model)
-            case .recommend(let model):
-                return collectionView.dequeueConfiguredReusableCell(using: self.videoCellRegistration, for: indexPath, item: model)
+                return collectionView.dequeueConfiguredReusableCell(using: self.historyCellRegistration, for: indexPath, item: model)
+            case .like(let model):
+                return collectionView.dequeueConfiguredReusableCell(using: self.likedVideoCellRegistration, for: indexPath, item: model)
             }
         }
         
@@ -51,78 +128,19 @@ final class MyVideoViewController: BaseViewController<MyVideoViewModel> {
             guard kind == UICollectionView.elementKindSectionHeader else { return nil }
             return collectionView.dequeueConfiguredReusableSupplementary(using: self.headerRegistration, for: indexPath)
         }
-        return dataSource
-    }()
-    
-    private let headerRegistration: UICollectionView.SupplementaryRegistration<
-        SectionHeaderView> = {
-            UICollectionView.SupplementaryRegistration<SectionHeaderView>(
-                elementKind: UICollectionView.elementKindSectionHeader
-            ) { headerView, _, indexPath in
-                guard let section = MyVideoSection(rawValue: indexPath.section) else { return }
-                
-                switch section {
-                case .history:
-                    headerView.headerText = "시청 기록"
-                    headerView.setTrailingActionTitle("모두 보기", handler: { print("debug - 모두 보기"
-                    ) })
-                case .recommend:
-                    headerView.headerText = "추천 영상"
-                }
-            }
-        }()
-    
-    private let historyRegistration: UICollectionView.CellRegistration<HistoryCardCell,HistoryItem> = {
-        UICollectionView.CellRegistration<HistoryCardCell, HistoryItem> { cell,
-            _,
-            model in
-            cell.configure(with: model)
-        }
-    }()
-    
-    private let videoCellRegistration = UICollectionView.CellRegistration<VideoCell, Video> { cell, _, model in
-        cell.configure(title: model.title, description: model.description, isLiked: model.isLiked, thumbnailImageURL: model.thumbnailURL)
     }
     
-    override func setupUI() {
-        super.setupUI()
-        navigationItem.title = "나만의 비디오"
-        collectionView.dataSource = self.dataSource
-        configureData(histories: demoHistories, recommendedVideos: demoRecommendedVideos, animate: false)
-    }
-    
-    override func setupLayouts() {
-        super.setupLayouts()
-        view.addSubview(collectionView)
-    }
-    
-    override func setupConstraints() {
-        super.setupConstraints()
-        collectionView.anchor
-            .top(view.safeAreaLayoutGuide.topAnchor)
-            .leading(view.safeAreaLayoutGuide.leadingAnchor)
-            .trailing(view.safeAreaLayoutGuide.trailingAnchor)
-            .bottom(view.safeAreaLayoutGuide.bottomAnchor)
-    }
-    
-    override func bind() {
-        super.bind()
-    }
-    
-    func configureData(histories: [HistoryItem], recommendedVideos: [Video], animate: Bool = true) {
-        self.histories = histories
-        self.recommendedVideos = recommendedVideos
-        applySnapshot(animate: animate)
-    }
-
-    
-    private func applySnapshot(animate: Bool) {
-        var snapshot = NSDiffableDataSourceSnapshot<MyVideoSection, MyVideoItem>()
-        snapshot.appendSections([.history, .recommend])
-        snapshot.appendItems(histories.map { .history($0) }, toSection: .history)
-        snapshot.appendItems(recommendedVideos.map { MyVideoItem.recommend($0) }, toSection: .recommend)
+    private func applySnapshot(for section: MyVideoSection, items: [MyVideoItem]) {
+        var snapshot = dataSource.snapshot()
         
-        dataSource.apply(snapshot, animatingDifferences: animate)
+        if !snapshot.sectionIdentifiers.contains(section) {
+            snapshot.appendSections([section])
+        }
+        
+        snapshot.deleteItems(snapshot.itemIdentifiers(inSection: section))
+        snapshot.appendItems(items, toSection: section)
+        
+        dataSource.apply(snapshot, animatingDifferences: true)
     }
     
     // MARK: - Compositional Layout
@@ -137,39 +155,39 @@ final class MyVideoViewController: BaseViewController<MyVideoViewModel> {
                     heightDimension: .fractionalHeight(1.0)
                 )
                 let item = NSCollectionLayoutItem(layoutSize: itemSize)
-                item.contentInsets = .init(top: 0, leading: 8, bottom: 0, trailing: 8)
                 
                 let groupSize = NSCollectionLayoutSize(
                     widthDimension: .absolute(160),
-                    heightDimension: .absolute(220)
+                    heightDimension: .absolute(140)
                 )
                 let group = NSCollectionLayoutGroup.vertical(layoutSize: groupSize, subitems: [item])
                 
                 let section = NSCollectionLayoutSection(group: group)
                 section.orthogonalScrollingBehavior = .groupPaging
-                section.contentInsets = .init(top: 12, leading: 12, bottom: 16, trailing: 12)
+                section.contentInsets = .init(top: .zero, leading: 20, bottom: 16, trailing: 12)
+                section.interGroupSpacing = 8
                 
                 if let header = self?.makeHeaderItem() {
                     section.boundarySupplementaryItems = [header]
                 }
                 return section
-            case .recommend:
+            case .like:
                 let itemSize = NSCollectionLayoutSize(
                     widthDimension: .fractionalWidth(1.0),
                     heightDimension: .fractionalHeight(1.0)
                 )
                 let item = NSCollectionLayoutItem(layoutSize: itemSize)
-                item.contentInsets = .init(top: 0, leading: 20, bottom: 8, trailing: 20)
-
+                
                 let groupSize = NSCollectionLayoutSize(
                     widthDimension: .fractionalWidth(1.0),
-                    heightDimension: .absolute(120)
+                    heightDimension: .absolute(80)
                 )
                 let group = NSCollectionLayoutGroup.vertical(layoutSize: groupSize, subitems: [item])
-
+                
                 let section = NSCollectionLayoutSection(group: group)
-                section.contentInsets = .init(top: 12, leading: 0, bottom: 16, trailing: 0)
-
+                section.contentInsets = .init(top: .zero, leading: 20, bottom: 16, trailing: 20)
+                section.interGroupSpacing = 15
+                
                 if let header = self?.makeHeaderItem() {
                     section.boundarySupplementaryItems = [header]
                 }
@@ -181,7 +199,7 @@ final class MyVideoViewController: BaseViewController<MyVideoViewModel> {
     private func makeHeaderItem() -> NSCollectionLayoutBoundarySupplementaryItem {
         let size = NSCollectionLayoutSize(
             widthDimension: .fractionalWidth(1.0),
-            heightDimension: .estimated(44)
+            heightDimension: .absolute(40)
         )
         return NSCollectionLayoutBoundarySupplementaryItem(
             layoutSize: size,
@@ -194,11 +212,14 @@ final class MyVideoViewController: BaseViewController<MyVideoViewModel> {
 extension MyVideoViewController: UICollectionViewDelegate {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         guard let item = dataSource.itemIdentifier(for: indexPath) else { return }
+        let selectdVideoID: UUID
         switch item {
         case .history(let model):
-            print("Tap history: \(model.title)")
-        case .recommend(let model):
-            print("Tap recommend: \(model.title)")
+            selectdVideoID = model.id
+        case .like(let model):
+            selectdVideoID = model.id
         }
+        let vc = VideoDetailViewController(viewModel: VideoDetailViewModel(id: selectdVideoID))
+        navigationController?.pushViewController(vc, animated: true)
     }
 }
