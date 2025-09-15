@@ -75,6 +75,7 @@ final class VideoListViewController: BaseViewController<VideoListViewModel> {
     override func setupUI() {
         super.setupUI()
         navigationItem.title = "모든 콘텐츠"
+        navigationController?.navigationBar.tintColor = UIColor.FH.primary.color
         updateCategoryMenu()
     }
     

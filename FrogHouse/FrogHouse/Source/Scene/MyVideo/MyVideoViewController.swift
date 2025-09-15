@@ -12,7 +12,7 @@ import UIKit
 final class MyVideoViewController: BaseViewController<MyVideoViewModel> {
     private lazy var myVideoCollectionView: UICollectionView = {
         let cv = UICollectionView(frame: .zero, collectionViewLayout: makeLayout())
-        cv.backgroundColor = .systemBackground
+        cv.backgroundColor = .clear
         cv.alwaysBounceVertical = true
         cv.delegate = self
         return cv

@@ -40,9 +40,10 @@ final class PlayerControlsView: UIView {
     
     // MARK: - Buttons
     private let seekBackwardButton: UIButton = {
+
         var config = UIButton.Configuration.plain()
         config.image = UIImage(systemName: "gobackward.10", withConfiguration: UIImage.SymbolConfiguration(pointSize: 22, weight: .regular))
-        config.baseForegroundColor = UIColor.FH.signatureGreen.color
+        config.baseForegroundColor = UIColor.FH.primary.color
         config.contentInsets = .zero
 
         let button = UIButton(configuration: config)
@@ -50,9 +51,10 @@ final class PlayerControlsView: UIView {
     }()
 
     private let seekForwardButton: UIButton = {
+
         var config = UIButton.Configuration.plain()
         config.image = UIImage(systemName: "goforward.10", withConfiguration: UIImage.SymbolConfiguration(pointSize: 22, weight: .regular))
-        config.baseForegroundColor = UIColor.FH.signatureGreen.color
+        config.baseForegroundColor = UIColor.FH.primary.color
         config.contentInsets = .zero
 
         let button = UIButton(configuration: config)
@@ -69,28 +71,31 @@ final class PlayerControlsView: UIView {
     }()
 
     private let speedButton: UIButton = {
+
         var config = UIButton.Configuration.filled()
-        config.baseForegroundColor = UIColor.FH.signatureGreen.color
+        config.baseForegroundColor = UIColor.FH.primary.color
         config.baseBackgroundColor = .clear
         config.contentInsets = NSDirectionalEdgeInsets(top: 4, leading: 8, bottom: 4, trailing: 8)
 
         let button = UIButton(configuration: config)
+
         button.layer.borderWidth = 1
-        button.layer.borderColor = UIColor.FH.quaternary.cgColor
+        button.layer.borderColor = UIColor.FH.primary.cgColor
         button.layer.cornerRadius = 8
         button.titleLabel?.font = .FH.caption(size: 14)
         return button
     }()
 
     private let muteButton: UIButton = {
+
         var config = UIButton.Configuration.filled()
-        config.baseForegroundColor = UIColor.FH.signatureGreen.color
+        config.baseForegroundColor = UIColor.FH.primary.color
         config.baseBackgroundColor = .clear
         config.contentInsets = NSDirectionalEdgeInsets(top: 4, leading: 8, bottom: 4, trailing: 8)
 
         let button = UIButton(configuration: config)
         button.layer.borderWidth = 1
-        button.layer.borderColor = UIColor.FH.quaternary.cgColor
+        button.layer.borderColor = UIColor.FH.primary.cgColor
         button.layer.cornerRadius = 8
         return button
     }()

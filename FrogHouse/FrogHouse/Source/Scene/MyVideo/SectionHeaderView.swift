@@ -41,6 +41,7 @@ final class SectionHeaderView: UICollectionReusableView {
             .bottom(container.bottomAnchor)
         
         actionButton.titleLabel?.font = .systemFont(ofSize: 15, weight: .semibold)
+        actionButton.setTitleColor(UIColor.FH.signatureGreen.color, for: .normal)
         
         actionButton.anchor
             .top(container.topAnchor)
