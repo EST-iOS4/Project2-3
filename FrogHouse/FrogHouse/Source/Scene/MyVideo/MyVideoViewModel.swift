@@ -9,50 +9,17 @@ import Combine
 import Foundation
 
 final class MyVideoViewModel {
-    struct HistoryItem: Hashable {
-        let id = UUID()
-        let title: String
-        let thumbnailURL: URL?
-    }
-    
-    @Published private(set) var historyVideoModel: [HistoryItem] = []
+    @Published private(set) var historyVideoModel: [Video] = []
     @Published private(set) var likedVideoModel: [Video] = []
     
     func fetchMyVideoModel() throws {
-        historyVideoModel = [
-            HistoryItem(
-                title: "오늘의 하이라이트: SwiftUI 기초 튜토리얼",
-                thumbnailURL: URL(string: "https://picsum.photos/id/1011/200/120")
-            ),
-            HistoryItem(
-                title: "iOS Combine 실습 예제",
-                thumbnailURL: URL(string: "https://picsum.photos/id/1012/200/120")
-            ),
-            HistoryItem(
-                title: "MVVM 패턴으로 앱 구조 잡기",
-                thumbnailURL: URL(string: "https://picsum.photos/id/1013/200/120")
-            ),
-            HistoryItem(
-                title: "UICollectionView Compositional Layout 배우기",
-                thumbnailURL: URL(string: "https://picsum.photos/id/1014/200/120")
-            ),
-            HistoryItem(
-                title: "AVPlayer로 비디오 스트리밍 테스트",
-                thumbnailURL: URL(string: "https://picsum.photos/id/1015/200/120")
-            ),
-            HistoryItem(
-                title: "Swift Enum과 DiffableDataSource 활용",
-                thumbnailURL: URL(string: "https://picsum.photos/id/1016/200/120")
-            ),
-            HistoryItem(
-                title: "앱 성능 최적화 전략",
-                thumbnailURL: URL(string: "https://picsum.photos/id/1017/200/120")
-            ),
-            HistoryItem(
-                title: "실전 iOS 프로젝트 구조 예시",
-                thumbnailURL: URL(string: "https://picsum.photos/id/1018/200/120")
-            ),
-        ]
+        let historyRequest = Video.fetchRequest()
+        historyRequest.predicate = NSPredicate(format: "statistics.viewCount > 0")
+        historyRequest.sortDescriptors = [NSSortDescriptor(key: "createdAt", ascending: false)]
+        historyRequest.fetchLimit = 5
+        
+        let historyVideos = try PersistenceManager.shared.fetch(request: historyRequest)
+        historyVideoModel = historyVideos
         
         let request = Video.fetchRequest()
         request.sortDescriptors = [NSSortDescriptor(key: "createdAt", ascending: true)]
@@ -60,7 +27,6 @@ final class MyVideoViewModel {
         
         let likedVideos = try PersistenceManager.shared.fetch(request: request)
         likedVideoModel = likedVideos
-        
     }
     
     func cancelLike(at video: Video) throws {

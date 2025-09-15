@@ -59,7 +59,7 @@ final class VideoDetailViewController: BaseViewController<VideoDetailViewModel> 
         let label = UILabel()
         label.font = .FH.amount(size: 22)
         label.numberOfLines = 2
-        label.textColor = .black
+        label.textColor = UIColor.FH.primary.color
         label.textAlignment = .center
         return label
     }()
@@ -68,7 +68,7 @@ final class VideoDetailViewController: BaseViewController<VideoDetailViewModel> 
         let label = UILabel()
         label.font = .FH.body(size: 16)
         label.numberOfLines = 0
-        label.textColor = .darkGray
+        label.textColor = UIColor.FH.secondary.color
         label.textAlignment = .center
         return label
     }()
@@ -76,15 +76,14 @@ final class VideoDetailViewController: BaseViewController<VideoDetailViewModel> 
     private let statisticsLabel: UILabel = {
         let label = UILabel()
         label.font = .FH.body(size: 14)
-        label.textColor = .gray
+        label.textColor = UIColor.FH.secondary.color
         label.textAlignment = .center
         return label
     }()
-    
     private let feedbackImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFit
-        imageView.tintColor = .white
+        imageView.tintColor = UIColor.FH.primary.color
         imageView.alpha = 0
         return imageView
     }()
@@ -302,12 +301,14 @@ final class VideoDetailViewController: BaseViewController<VideoDetailViewModel> 
     @objc
     private func didDoubleTapLeft() {
         viewModel.seekBackward()
+        HapticManager.shared.hapticImpact(style: .rigid)
         showFeedback(UIImage(systemName: "gobackward.10"))
     }
     
     @objc
     private func didDoubleTapRight() {
         viewModel.seekForward()
+        HapticManager.shared.hapticImpact(style: .rigid)
         showFeedback(UIImage(systemName: "goforward.10"))
     }
 }

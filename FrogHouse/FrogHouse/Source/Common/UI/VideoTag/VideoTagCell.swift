@@ -15,7 +15,8 @@ final class VideoTagCell: UICollectionViewCell {
     
     private let label: PaddingLabel = {
         let lb = PaddingLabel(insets: UIEdgeInsets(top: 2, left: 6, bottom: 2, right: 6))
-        lb.font = .preferredFont(forTextStyle: .caption2)
+        lb.font = .preferredFont(forTextStyle: .footnote)
+        lb.font = .systemFont(ofSize: lb.font.pointSize, weight: .bold)
         lb.textColor = .secondaryLabel
         lb.backgroundColor = .systemGreen.withAlphaComponent(0.12)
         lb.layer.cornerRadius = 6
@@ -39,7 +40,7 @@ final class VideoTagCell: UICollectionViewCell {
     
     // MARK: Jay - 한 줄 높이 계산 (기기별 폰트사이즈대응)
     static func singleLineHeightForCurrentStyle() -> CGFloat {
-        let font = UIFont.preferredFont(forTextStyle: .caption2)
+        let font = UIFont.preferredFont(forTextStyle: .footnote)
         let labelHeight = ceil(font.lineHeight) + 2 + 2
         return labelHeight
     }

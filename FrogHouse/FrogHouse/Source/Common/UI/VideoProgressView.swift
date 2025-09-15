@@ -11,6 +11,7 @@ final class VideoProgressView: UIView {
     let volumeSlider: UISlider = {
         let slider = UISlider()
         slider.value = 0.0
+        slider.minimumTrackTintColor = UIColor.FH.signatureGreen.color
         return slider
     }()
     
@@ -18,7 +19,7 @@ final class VideoProgressView: UIView {
         let label = UILabel()
         label.numberOfLines = 1
         label.font = .FH.body(size: 12)
-        label.textColor = .secondaryLabel
+        label.textColor = UIColor.FH.primary.color
         return label
     }()
     
@@ -26,7 +27,7 @@ final class VideoProgressView: UIView {
         let label = UILabel()
         label.numberOfLines = 1
         label.font = .FH.body(size: 12)
-        label.textColor = .secondaryLabel
+        label.textColor = UIColor.FH.primary.color
         return label
     }()
     

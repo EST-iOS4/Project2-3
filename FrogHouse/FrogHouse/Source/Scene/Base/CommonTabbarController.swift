@@ -22,13 +22,13 @@ final class CommonTabbarController: UITabBarController {
     private func setupTabBar() {
         let tabs: [TabbarItem] = [
             TabbarItem(title: "Videos", unselectedImage: UIImage(systemName: "video")!, selectedImage: UIImage(systemName: "video.fill")!),
-            TabbarItem(title: "Recommended", unselectedImage: UIImage(systemName: "star")!, selectedImage: UIImage(systemName: "star.fill")!),
+            TabbarItem(title: "Popular", unselectedImage: UIImage(systemName: "trophy")!, selectedImage: UIImage(systemName: "trophy.fill")!),
             TabbarItem(title: "History", unselectedImage: UIImage(systemName: "clock")!, selectedImage: UIImage(systemName: "clock.fill")!)
         ]
         
         let viewControllers: [UIViewController] = [
             NavigationController(rootViewController: VideoListViewController(viewModel: VideoListViewModel())),
-            NavigationController(rootViewController: RecommendedVideoViewController(viewModel: RecommendedVideoViewModel.makeMockData())),
+            NavigationController(rootViewController: RecommendedVideoViewController(viewModel: RecommendedVideoViewModel())),
             NavigationController(rootViewController: MyVideoViewController(viewModel: MyVideoViewModel()))
         ]
         

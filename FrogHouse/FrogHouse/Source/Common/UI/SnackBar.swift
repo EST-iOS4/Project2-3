@@ -46,7 +46,7 @@ class SnackBar: UIView {
     
     private lazy var descriptionLabel: UILabel = {
         let label = UILabel()
-        label.textColor = .FH.signatureGreen.color
+        label.textColor = .FH.primary.color
         label.text = style.message
         label.numberOfLines = 1
         return label
@@ -66,7 +66,7 @@ class SnackBar: UIView {
     required init?(coder: NSCoder) { fatalError() }
     
     private func setupUI() {
-        backgroundColor = .FH.backgroundBase.color
+        backgroundColor = .FH.backgroundLightGreen.color
         layer.cornerRadius = 8
         
         addSubview(contentStackView)
