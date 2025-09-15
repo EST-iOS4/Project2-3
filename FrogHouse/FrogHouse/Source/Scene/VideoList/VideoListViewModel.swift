@@ -20,6 +20,10 @@ final class VideoListViewModel {
             hasher.combine(id)
             hasher.combine(isLiked)
         }
+        
+        static func ==(lhs: VideoListItem, rhs: VideoListItem) -> Bool {
+            lhs.id == rhs.id && lhs.isLiked == rhs.isLiked
+        }
     }
     
     private var isLoading = false
@@ -45,13 +49,9 @@ final class VideoListViewModel {
         }
     }
     
-    func toggleLike(at video: VideoListItem) throws {
-        guard let selectedIndex = videoList.firstIndex(where: { $0.id == video.id }) else { return }
-        let updatedVideoState = !videoList[selectedIndex].isLiked
-        
-        try PersistenceManager.shared.updateVideo(videoID: video.id) { video in
-            video.isLiked = updatedVideoState
+    func toggleLike(id: UUID, isLiked: Bool) throws {
+        try PersistenceManager.shared.updateVideo(videoID: id) { video in
+            video.isLiked = isLiked
         }
-        videoList[selectedIndex].isLiked = updatedVideoState
     }
 }

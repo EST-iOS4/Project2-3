@@ -100,7 +100,7 @@ final class MyVideoViewController: BaseViewController<MyVideoViewModel> {
                       item.isLiked else { return }
                 do {
                     try self.viewModel.cancelLike(at: item)
-                    cell.updateState(item.isLiked)
+                    cell.isLiked = !item.isLiked
                     showSnackBar(type: .updateUnLikedState(true))
                     
                     let itemToDelete = MyVideoItem.like(item)

@@ -15,6 +15,11 @@ final class VideoCell: UICollectionViewCell {
     
     private var cancellables = Set<AnyCancellable>()
     var onLikeTapped: (() -> Void)?
+    var isLiked: Bool = false {
+        didSet {
+            updateState(isLiked)
+        }
+    }
     
     private let thumbnailImageView: UIImageView = {
         let imageView = UIImageView()
@@ -62,7 +67,7 @@ final class VideoCell: UICollectionViewCell {
         super.prepareForReuse()
         titleLabel.text = nil
         descriptionLabel.text = nil
-        likeButton.setImage(nil, for: .normal)
+        likeButton.setImage(nil, for: .normal)        
     }
     
     private func setupUI() {
@@ -115,11 +120,11 @@ extension VideoCell {
     ) {
         titleLabel.text = title
         descriptionLabel.text = description
-        updateState(isLiked)
+        self.isLiked = isLiked
         thumbnailImageView.kf.setImage(with: thumbnailImageURL)
     }
     
-    func updateState(_ liked: Bool) {
+    private func updateState(_ liked: Bool) {
         let buttonImage = UIImage(systemName: liked ? "heart.fill" : "heart")
         let buttonColor: UIColor = liked ? UIColor.FH.emphasis.color :  UIColor.FH.primary.color  
 

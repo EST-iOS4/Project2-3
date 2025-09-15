@@ -179,11 +179,11 @@ extension VideoListViewController {
                       let selectedIndexPath = collectionView.indexPath(for: cell),
                       let item = self.dataSource.itemIdentifier(for: selectedIndexPath) else { return }
                 do {
-                    try self.viewModel.toggleLike(at: item)
-                    cell.updateState(item.isLiked)
-                    showSnackBar(type: item.isLiked ? .updateUnLikedState(true) : .updateLikedState(true))
+                    try self.viewModel.toggleLike(id: item.id, isLiked: !cell.isLiked)
+                    cell.isLiked = !cell.isLiked
+                    showSnackBar(type: cell.isLiked ? .updateLikedState(true) : .updateUnLikedState(true))
                 } catch {
-                    showSnackBar(type: item.isLiked ? .updateUnLikedState(false) : .updateLikedState(false))
+                    showSnackBar(type: cell.isLiked ? .updateLikedState(false) : .updateUnLikedState(false))
                 }
             }
             return cell
