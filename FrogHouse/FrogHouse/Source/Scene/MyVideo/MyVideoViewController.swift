@@ -19,28 +19,10 @@ final class MyVideoViewController: BaseViewController<MyVideoViewModel> {
     }()
     
     private var dataSource: UICollectionViewDiffableDataSource<MyVideoSection, MyVideoItem>!
-    private var historyCellRegistration: UICollectionView.CellRegistration<HistoryCardCell,MyVideoViewModel.HistoryItem>!
+    private var historyCellRegistration: UICollectionView.CellRegistration<HistoryCardCell,Video>!
     private var likedVideoCellRegistration: UICollectionView.CellRegistration<VideoCell, Video>!
     
-    private let headerRegistration: UICollectionView.SupplementaryRegistration<
-        SectionHeaderView> = {
-            UICollectionView.SupplementaryRegistration<SectionHeaderView>(
-                elementKind: UICollectionView.elementKindSectionHeader
-            ) { headerView,
-                _,
-                indexPath in
-                guard let section = MyVideoSection(rawValue: indexPath.section) else { return }
-                
-                switch section {
-                case .history:
-                    headerView.headerText = "시청 기록"
-                    //TODO: 서정원 - 모두 보기 기능의 경우 필수기능 구현 후 개발 예정
-                    headerView.setTrailingActionTitle("모두 보기", handler: { print("debug - 모두 보기") })
-                case .like:
-                    headerView.headerText = "좋아요 영상"
-                }
-            }
-        }()
+    private var headerRegistration: UICollectionView.SupplementaryRegistration<SectionHeaderView>!
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
@@ -86,7 +68,7 @@ final class MyVideoViewController: BaseViewController<MyVideoViewModel> {
     }
     
     private func setupDataSource() {
-        historyCellRegistration = UICollectionView.CellRegistration<HistoryCardCell, MyVideoViewModel.HistoryItem> { cell, _, model in
+        historyCellRegistration = UICollectionView.CellRegistration<HistoryCardCell, Video> { cell, _, model in
             cell.configureUI(title: model.title, thumbnailImageURL: model.thumbnailURL)
         }
         
@@ -110,6 +92,25 @@ final class MyVideoViewController: BaseViewController<MyVideoViewModel> {
                 } catch {
                     showSnackBar(type: .updateUnLikedState(false))
                 }
+            }
+        }
+        
+        headerRegistration = UICollectionView.SupplementaryRegistration<SectionHeaderView>(
+            elementKind: UICollectionView.elementKindSectionHeader
+        ) { [weak self] headerView,
+            _,
+            indexPath in
+            guard let self = self, let section = MyVideoSection(rawValue: indexPath.section) else { return }
+            
+            switch section {
+            case .history:
+                headerView.headerText = "시청 기록"
+                headerView.setTrailingActionTitle("모두 보기", handler: {
+                    let vc = MyVideoHistoryAllViewController(viewModel: MyVideoHistoryAllViewModel())
+                    self.navigationController?.pushViewController(vc, animated: true)
+                })
+            case .like:
+                headerView.headerText = "좋아요 영상"
             }
         }
         

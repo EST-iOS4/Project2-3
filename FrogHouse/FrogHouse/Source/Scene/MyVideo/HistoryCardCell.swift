@@ -8,14 +8,6 @@
 import UIKit
 
 final class HistoryCardCell: UICollectionViewCell {
-    private let containerStackView: UIStackView = {
-        let stackView = UIStackView()
-        stackView.backgroundColor = .clear
-        stackView.axis = .vertical
-        stackView.distribution = .fill
-        stackView.alignment = .fill
-        return stackView
-    }()
     
     private let thumbnailImageView: UIImageView = {
         let imageView = UIImageView()
@@ -29,7 +21,7 @@ final class HistoryCardCell: UICollectionViewCell {
     private let titleLabel: UILabel = {
         let label = UILabel()
         label.font = UIFont.FH.title(size: 14)
-        label.numberOfLines = 1
+        label.numberOfLines = 2
         label.lineBreakMode = .byTruncatingTail
         return label
     }()
@@ -37,6 +29,7 @@ final class HistoryCardCell: UICollectionViewCell {
     override init(frame: CGRect) {
         super.init(frame: frame)
         configureUI()
+        setupConstraints()
     }
     
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
@@ -51,10 +44,22 @@ final class HistoryCardCell: UICollectionViewCell {
         contentView.layer.cornerRadius = 8
         contentView.layer.masksToBounds = true
         
-        contentView.addSubview(containerStackView)
-        [thumbnailImageView, titleLabel].forEach { containerStackView.addArrangedSubview($0) }
-        
-        containerStackView.pinToSuperview()
+        contentView.addSubview(thumbnailImageView)
+        contentView.addSubview(titleLabel)
+    }
+    
+    private func setupConstraints() {
+        thumbnailImageView.anchor
+            .top(contentView.topAnchor)
+            .leading(contentView.leadingAnchor)
+            .trailing(contentView.trailingAnchor)
+            .height(100)
+
+        titleLabel.anchor
+            .top(thumbnailImageView.bottomAnchor, offset: 4)
+            .leading(contentView.leadingAnchor, offset: 4)
+            .trailing(contentView.trailingAnchor, offset: 4)
+            .bottom(contentView.bottomAnchor, offset: 4)
     }
 }
 
