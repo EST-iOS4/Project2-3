@@ -142,11 +142,20 @@ extension SnackBar: SnackBarPresentable {
     }
     
     @objc func dismiss() {
-        animation(with: 200) { _ in
-            self.removeFromSuperview()
-        }
         dismissTimer?.invalidate()
         dismissTimer = nil
+        
+        UIView.animate(
+            withDuration: 0.3,
+            delay: 0,
+            options: [.curveEaseInOut],
+            animations: {
+                self.alpha = 0
+            },
+            completion: { _ in
+                self.removeFromSuperview()
+            }
+        )
     }
 }
 
