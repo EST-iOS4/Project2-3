@@ -31,7 +31,7 @@ final class VideoDetailViewController: BaseViewController<VideoDetailViewModel> 
     
     private lazy var playerContainerView: UIView = {
         let view = UIView()
-        view.backgroundColor = .black.withAlphaComponent(0.3)
+        view.backgroundColor = .FH.backgroundBase.color
         view.isUserInteractionEnabled = true
         return view
     }()
@@ -248,7 +248,7 @@ final class VideoDetailViewController: BaseViewController<VideoDetailViewModel> 
     private func setPlayerLayer() {
         let player = viewModel.getPlayer()
         let layer = AVPlayerLayer(player: player)
-        layer.videoGravity = .resizeAspect
+        layer.videoGravity = .resizeAspectFill
         layer.frame = playerContainerView.bounds
         
         playerContainerView.layer.sublayers?.forEach { $0.removeFromSuperlayer() }
