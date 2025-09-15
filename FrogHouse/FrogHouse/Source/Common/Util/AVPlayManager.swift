@@ -28,6 +28,7 @@ final class AVPlayManager {
         observeCurrentItemDuration()
         observeCurrentTime()
         observePlaybackEnd()
+        observeTimeControlStatus()
     }
     
     func getPlayer() -> AVPlayer { player }
@@ -43,6 +44,10 @@ final class AVPlayManager {
         player.play()
         player.rate = currentSpeed
         isPlaying = true
+        if let currentItem = player.currentItem,
+           CMTimeCompare(player.currentTime(), currentItem.duration) >= 0 {
+            player.seek(to: .zero)
+        }
     }
     
     func pause() {
@@ -54,10 +59,6 @@ final class AVPlayManager {
         if isPlaying {
             pause()
         } else {
-            if let currentItem = player.currentItem,
-               CMTimeCompare(player.currentTime(), currentItem.duration) >= 0 {
-                player.seek(to: .zero)
-            }
             play()
         }
     }
@@ -150,4 +151,14 @@ final class AVPlayManager {
             self?.didFinishPlaying.send()
         }
     }
+    
+    private func observeTimeControlStatus() {
+        player.publisher(for: \.timeControlStatus)
+            .sink { [weak self] status in
+                let isPlaying = (status == .playing)
+                self?.isPlaying = isPlaying
+            }
+            .store(in: &cancellables)
+    }
+    
 }

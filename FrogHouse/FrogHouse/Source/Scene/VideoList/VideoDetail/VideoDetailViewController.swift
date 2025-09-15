@@ -42,6 +42,15 @@ final class VideoDetailViewController: BaseViewController<VideoDetailViewModel> 
         return controlView
     }()
     
+    private let fullscreenButton: UIButton = {
+        var config = UIButton.Configuration.plain()
+        config.image = UIImage(systemName: "arrow.up.left.and.arrow.down.right", withConfiguration: UIImage.SymbolConfiguration(pointSize: 22, weight: .regular))
+        config.baseForegroundColor = UIColor.FH.signatureGreen.color
+        config.contentInsets = .zero
+        let button = UIButton(configuration: config)
+        return button
+    }()
+    
     private var playerLayer: AVPlayerLayer?
     
     private let videoTagsView = VideoTagListView()
@@ -88,6 +97,7 @@ final class VideoDetailViewController: BaseViewController<VideoDetailViewModel> 
         return indicator
     }()
     
+    // MARK: - Gesture
     private lazy var singleTapGesture: UITapGestureRecognizer = {
         let gesture = UITapGestureRecognizer(target: self, action: #selector(didTappedVideoScreen))
         gesture.numberOfTapsRequired = 1
@@ -95,6 +105,7 @@ final class VideoDetailViewController: BaseViewController<VideoDetailViewModel> 
         gesture.cancelsTouchesInView = false
         gesture.require(toFail: doubleTapLeftGesture)
         gesture.require(toFail: doubleTapRightGesture)
+        gesture.delegate = self
         return gesture
     }()
     
@@ -122,11 +133,6 @@ final class VideoDetailViewController: BaseViewController<VideoDetailViewModel> 
         playerLayer?.frame = playerContainerView.bounds
     }
     
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        viewModel.play()
-    }
-    
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         if isMovingFromParent {
@@ -140,7 +146,7 @@ final class VideoDetailViewController: BaseViewController<VideoDetailViewModel> 
         view.addSubview(scrollView)
         scrollView.addSubview(containerStackView)
         [playerContainerView, playerControlsView, titleLabel, descriptionLabel, videoTagsView, statisticsLabel].forEach { containerStackView.addArrangedSubview($0) }
-        [feedbackImageView, indicatorView].forEach { playerContainerView.addSubview($0) }
+        [feedbackImageView, indicatorView, fullscreenButton].forEach { playerContainerView.addSubview($0) }
     }
     
     override func setupConstraints() {
@@ -157,6 +163,10 @@ final class VideoDetailViewController: BaseViewController<VideoDetailViewModel> 
             .centerY(playerContainerView.centerYAnchor)
             .size(width: 50, height: 50)
         
+        fullscreenButton.anchor
+            .size(width: 32, height: 32)
+            .bottom(playerContainerView.bottomAnchor)
+            .trailing(playerContainerView.trailingAnchor)
         indicatorView.pinToSuperview()
     }
     
@@ -171,6 +181,7 @@ final class VideoDetailViewController: BaseViewController<VideoDetailViewModel> 
         super.bind()
         do {
             try viewModel.fetchVideo()
+            viewModel.play()
         } catch {
             showSnackBar(type: .fetchVideo(false))
         }
@@ -242,6 +253,15 @@ final class VideoDetailViewController: BaseViewController<VideoDetailViewModel> 
                 self?.statisticsLabel.text = "\(likeText) • \(viewText) • 생성일: \(createdDate)"
             }
             .store(in: &cancellables)
+        
+        fullscreenButton.addAction(.init { [weak self] _ in
+            guard let self else { return }
+            let avPlayerVC = AVPlayerViewController()
+            avPlayerVC.player = viewModel.getPlayer()
+            avPlayerVC.modalPresentationStyle = .fullScreen
+            avPlayerVC.showsPlaybackControls = true
+            present(avPlayerVC, animated: true)
+        }, for: .touchUpInside)
     }
     
     // MARK: - Private
@@ -321,6 +341,10 @@ extension VideoDetailViewController: PlayerControlsViewDelegate {
 
 extension VideoDetailViewController: UIGestureRecognizerDelegate {
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+        if touch.view?.isDescendant(of: fullscreenButton) == true {
+            return false
+        }
+        
         let location = touch.location(in: playerContainerView)
         let width = playerContainerView.bounds.width
         
