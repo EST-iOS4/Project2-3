@@ -5,6 +5,7 @@
 //  Created by 이건준 on 9/4/25.
 //
 
+import Combine
 import UIKit
 
 final class VideoListViewController: BaseViewController<VideoListViewModel> {
@@ -74,8 +75,7 @@ final class VideoListViewController: BaseViewController<VideoListViewModel> {
     
     override func setupUI() {
         super.setupUI()
-        navigationItem.title = "모든 콘텐츠"
-        updateCategoryMenu()
+        setupNavigationItem()
     }
     
     override func setupLayouts() {
@@ -118,6 +118,38 @@ final class VideoListViewController: BaseViewController<VideoListViewModel> {
                 }
             }
             .store(in: &cancellables)
+        
+        Publishers.CombineLatest(viewModel.$categories, viewModel.$selectedCategoryIndex)
+            .receive(on: RunLoop.main)
+            .sink { [weak self] categories, selectedIndex in
+                self?.updateMenu(categories: categories.map { $0.title }, selectedIndex: selectedIndex)
+            }
+            .store(in: &cancellables)
+    }
+    
+    private func setupNavigationItem() {
+        navigationItem.title = "모든 콘텐츠"
+        let navigationButtonStackView = UIStackView(arrangedSubviews: [categoryDropdownButton])
+        navigationButtonStackView.axis = .horizontal
+        navigationButtonStackView.alignment = .center
+        
+        navigationItem.rightBarButtonItem = UIBarButtonItem(customView: navigationButtonStackView)
+    }
+    
+    private func updateMenu(categories: [String], selectedIndex: Int) {
+        let actions = categories.enumerated().map { (index, title) in
+            UIAction(
+                title: title,
+                state: index == selectedIndex ? .on : .off) { [weak self] _ in
+                    do {
+                        try self?.viewModel.selectCategory(at: index)
+                    } catch {
+                        self?.showSnackBar(type: .fetchVideo(false))
+                    }
+                }
+        }
+        categoryDropdownButton.menu = UIMenu(title: "카테고리 선택", children: actions)
+        categoryDropdownButton.setTitle(categories[selectedIndex], for: .normal)
     }
     
     @objc
@@ -127,31 +159,6 @@ final class VideoListViewController: BaseViewController<VideoListViewModel> {
         } catch {
             showSnackBar(type: .fetchVideo(false))
         }
-    }
-    
-    private func updateCategoryMenu() {
-        let menu = makeCategoryMenu()
-        categoryDropdownButton.menu = menu
-        categoryDropdownButton.setTitle(viewModel.categories[viewModel.selectedCategoryIndex].title, for: .normal)
-        navigationItem.rightBarButtonItem = UIBarButtonItem(customView: categoryDropdownButton)
-    }
-    
-    private func makeCategoryMenu() -> UIMenu {
-        let actions = viewModel.categories.enumerated().map { (index, category) in
-            UIAction(
-                title: category.title,
-                state: index == viewModel.selectedCategoryIndex ? .on : .off
-            ) { [weak self] _ in
-                guard let self else { return }
-                do {
-                    try viewModel.selectCategory(at: index)
-                    updateCategoryMenu()
-                } catch {
-                    showSnackBar(type: .fetchVideo(false))
-                }
-            }
-        }
-        return UIMenu(title: "카테고리", options: .displayInline, children: actions)
     }
 }
 
