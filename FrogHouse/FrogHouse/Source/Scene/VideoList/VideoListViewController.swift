@@ -76,7 +76,6 @@ final class VideoListViewController: BaseViewController<VideoListViewModel> {
     override func setupUI() {
         super.setupUI()
         setupNavigationItem()
-        updateCategoryMenu()
     }
     
     override func setupLayouts() {

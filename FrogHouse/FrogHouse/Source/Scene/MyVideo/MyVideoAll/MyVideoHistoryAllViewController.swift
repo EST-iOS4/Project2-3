@@ -87,7 +87,7 @@ extension MyVideoHistoryAllViewController {
                       let item = self.dataSource.itemIdentifier(for: selectedIndexPath) else { return }
                 do {
                     try self.viewModel.toggleLike(at: item)
-                    cell.updateState(item.isLiked)
+                    cell.isLiked = !item.isLiked
                     showSnackBar(type: item.isLiked ? .updateLikedState(true) : .updateUnLikedState(true))
                 } catch {
                     showSnackBar(type: item.isLiked ? .updateLikedState(false) : .updateUnLikedState(false))
