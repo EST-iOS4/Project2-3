@@ -30,12 +30,12 @@ final class RecommendedVideoViewModel {
     init(store: FirestoreVideoListStore = .shared) {
         self.store = store
         // MARK: Jay - 필요 시 실시간 리스닝 (원치 않으면 주석 처리)
-        // store.startListening()
     }
 
     // MARK: Jay - 로드 (캐시 우선, TTL 지나면 자동 갱신)
     func load() {
         Task {
+            // MARK: Jay - 로딩 on
             await MainActor.run { onLoadingChanged?(true) }
             do {
                 let dtos = try await store.getOrFetch(type: .viewCountDesc)
@@ -51,6 +51,7 @@ final class RecommendedVideoViewModel {
                     }
                 }
             } catch {
+                // MARK: Jay - 에러 전달
                 await MainActor.run {
                     self.onLoadingChanged?(false)
                     self.onError?("로드 실패: \(error.localizedDescription)")
