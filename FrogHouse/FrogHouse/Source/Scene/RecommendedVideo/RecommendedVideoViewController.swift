@@ -39,13 +39,9 @@ final class RecommendedVideoViewController: BaseViewController<RecommendedVideoV
     }
     
     override func setupUI() {
-        super.setupUI()
-                
+        navigationItem.title = "TOP 10 – 오늘 뭐 봐?"
         videoCarouselView.backgroundColor = .clear
         videoTagsView.backgroundColor = .clear
-
-        navigationItem.title = "TOP 10 – 오늘 뭐 봐?"
-        
         // MARK: Jay - 캐러셀 페이지 변경시 → VM 인덱스 반영
         videoCarouselView.onPageChanged = { [weak self] newIndex in
             self?.viewModel.setCurrentIndex(newIndex)
@@ -78,7 +74,12 @@ final class RecommendedVideoViewController: BaseViewController<RecommendedVideoV
             .trailing(safeArea.trailingAnchor, offset: 20)
     }
     
-
+    // MARK: Jay - Core Data에서 Statistics.viewCount DESC 로 로드
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        viewModel.load()
+    }
+    
     // MARK: Jay - LifeCycle에 맞게 오토슬라이드 설정
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
