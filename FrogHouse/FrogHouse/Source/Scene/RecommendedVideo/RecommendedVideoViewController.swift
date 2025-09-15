@@ -6,6 +6,8 @@
 //
 
 import UIKit
+import FirebaseCore
+import FirebaseFirestore
 
 // MARK: Jay - 추천 비디오 화면 (BaseViewController 제네릭 기반)
 final class RecommendedVideoViewController: BaseViewController<RecommendedVideoViewModel> {
@@ -80,9 +82,6 @@ final class RecommendedVideoViewController: BaseViewController<RecommendedVideoV
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         viewModel.load()
-        // MARK: Jay - 파이어베이스에 데이터 넣거나 삭제 (임시코드)
-        firestoreInsertSampleData()
-//        firestoreDeleteAllSampleData()
     }
 
     // MARK: Jay - 오토 슬라이드 라이프사이클
