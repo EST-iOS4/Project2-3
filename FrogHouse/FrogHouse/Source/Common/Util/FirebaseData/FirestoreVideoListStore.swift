@@ -49,6 +49,12 @@ actor FirestoreVideoListStore {
         cache.first { $0.id == id.uuidString || $0.id == id.uuidString.uppercased() }
     }
 
+    func getDto(for id: UUID) async throws -> FirestoreVideoListDTO? {
+            let docRef = collection.document(id.uuidString)
+            let snapshot = try await docRef.getDocument()
+            return try snapshot.data(as: FirestoreVideoListDTO.self)
+        }
+    
     // MARK: Jay - 실시간 변경 감지 시작
     func startListening() {
         guard listener == nil else { return }

@@ -194,11 +194,13 @@ final class VideoDetailViewController: BaseViewController<VideoDetailViewModel> 
     // MARK: - Binding
     override func bind() {
         super.bind()
-        do {
-            try viewModel.fetchVideo()
-            viewModel.play()
-        } catch {
-            showSnackBar(type: .fetchVideo(false))
+        Task {
+            do {
+                try await viewModel.fetchVideo()
+                viewModel.play()
+            } catch {
+                showSnackBar(type: .fetchVideo(false))
+            }
         }
         
         viewModel.$startTime
@@ -282,15 +284,17 @@ final class VideoDetailViewController: BaseViewController<VideoDetailViewModel> 
             .throttle(for: .milliseconds(500), scheduler: RunLoop.main, latest: false)
             .sink { [weak self] _ in
                 guard let self else { return }
-                do {
-                    HapticManager.shared.hapticImpact(style: .light)
-                    let updatedState = !(likeButton.currentImage == UIImage(systemName: "heart.fill"))
-                    try self.viewModel.toggleLike(isLiked: updatedState)
-                    self.updateState(updatedState)
-                    self.showSnackBar(type: updatedState ? .updateLikedState(true) : .updateUnLikedState(true) )
-                } catch {
-                    guard let video = self.viewModel.video else { return }
-                    self.showSnackBar(type: video.isLiked ? .updateUnLikedState(false) : .updateLikedState(false) )
+                Task {
+                    do {
+                        HapticManager.shared.hapticImpact(style: .light)
+                        let updatedState = !(self.likeButton.currentImage == UIImage(systemName: "heart.fill"))
+                        try await self.viewModel.toggleLike(isLiked: updatedState)
+                        self.updateState(updatedState)
+                        self.showSnackBar(type: updatedState ? .updateLikedState(true) : .updateUnLikedState(true) )
+                    } catch {
+                        guard let video = self.viewModel.video else { return }
+                        self.showSnackBar(type: video.isLiked ? .updateUnLikedState(false) : .updateLikedState(false) )
+                    }
                 }
             }
             .store(in: &cancellables)

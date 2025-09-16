@@ -53,29 +53,22 @@ final class VideoDetailViewModel: ObservableObject {
     func play() { playManager.play() }
     
     // MARK: Jay - Firestore 캐시에서 DTO 조회 → DetailItem 매핑 → 플레이어 로드
-    func fetchVideo() {
-        isLoading = true
-        Task { [weak self] in
-            guard let self else { return }
-            if let dto = await FirestoreVideoListStore.shared.dto(for: id),
+    func fetchVideo() async throws {
+        Task {
+            isLoading = true
+            defer { isLoading = false }
+            if let dto = try await FirestoreVideoListStore.shared.getDto(for: id),
                let detail = FirestoreVideoListMapper.toVideoDetailItem(dto) {
-                await MainActor.run {
-                    if let mp4 = URL(string: dto.mp4URL) {
-                        self.playManager.loadVideo(url: mp4)
-                    }
-                    self.video = detail
-                    self.isLoading = false
+                if let mp4 = URL(string: dto.mp4URL) {
+                    self.playManager.loadVideo(url: mp4)
                 }
-                return
+                self.video = detail
             }
-            await MainActor.run { self.isLoading = false }
         }
     }
     
-    func toggleLike(isLiked: Bool) throws {
-        try PersistenceManager.shared.updateVideo(videoID: id) { video in
-            video.isLiked = isLiked
-        }
+    func toggleLike(isLiked: Bool) async throws {
+        try await FirestoreCRUDHelper.updateIsLiked(id: id, isLiked: isLiked)
     }
     
     private func bindManager() {
