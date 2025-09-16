@@ -38,21 +38,11 @@ final class RecommendedVideoViewModel {
         Task {
             await MainActor.run { onLoadingChanged?(true) }
             do {
-                // 1️⃣ Firestore DTO 배열 가져오기
-                let dtos = try await store.getOrFetch()
-                // 2️⃣ viewCount 기준으로 내림차순 정렬
-                let sorted = FirestoreVideoListMapper.sortedDTOs(
-                    dtos,
-                    sortby: .viewCountDesc
-                )
-                // 3️⃣ 매핑 후 상위 N개만 사용
-                let finalModels: [RecommendedVideoItem] =
-                    sorted.compactMap(FirestoreVideoListMapper.toRecommendedVideoItem)
-                          .prefix(maxCount)
-                          .map { $0 }
-                // 4️⃣ UI 업데이트
+                let dtos = try await store.getOrFetch(type: .viewCountDesc)
+                let all: [RecommendedVideoItem] = dtos.compactMap { FirestoreVideoListMapper.toRecommendedVideoItem($0) }
+                
                 await MainActor.run {
-                    self.items = finalModels
+                    self.items = all
                     self.currentIndex = min(self.currentIndex, max(0, self.items.count - 1))
                     self.onListUpdated?(self.items)
                     self.onLoadingChanged?(false)

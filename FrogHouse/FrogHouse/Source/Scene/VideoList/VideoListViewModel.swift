@@ -17,9 +17,9 @@ final class VideoListViewModel {
     @Published private(set) var categories: [VideoCategory] = VideoCategory.allCases
     @Published private(set) var selectedCategoryIndex: Int = 0
     
-    func selectCategory(at index: Int) {
+    func selectCategory(at index: Int) async throws {
         selectedCategoryIndex = index
-        applyFilter(with: videoList)
+        try await fetchVideoList()
     }
     
     func fetchVideoList() async throws {
@@ -27,30 +27,20 @@ final class VideoListViewModel {
         isLoading = true
         defer { isLoading = false }
         
-        let dtos = try await FirestoreVideoListStore.shared.loadFirestoreData()
-        let sorted = FirestoreVideoListMapper.sortedDTOs(
-            dtos,
-            sortby: .createdAtDesc
-        )
-        let all: [VideoListItem] = sorted.compactMap {
+        let dtos = try await FirestoreVideoListStore.shared.loadFirestoreData(type: .createdAtDesc)
+        let all: [VideoListItem] = dtos.compactMap {
             FirestoreVideoListMapper.toVideoListItem($0)
         }
         self.videoList = self.filtered(all)
     }
 
-    func toggleLike(id: UUID, isLiked: Bool) {
+    func toggleLike(id: UUID, isLiked: Bool) async throws {
         if let idx = videoList.firstIndex(where: { $0.id == id }) {
             var item = videoList[idx]
             item.isLiked = isLiked
             videoList[idx] = item
         }
-        Task {
-            do {
-                try await FirestoreCRUDHelper.updateIsLiked(id: id, isLiked: isLiked)
-            } catch {
-                print("❌ 좋아요 업데이트 실패:", error)
-            }
-        }
+        try await FirestoreCRUDHelper.updateIsLiked(id: id, isLiked: isLiked)
     }
     
     private func filtered(_ all: [VideoListItem]) -> [VideoListItem] {

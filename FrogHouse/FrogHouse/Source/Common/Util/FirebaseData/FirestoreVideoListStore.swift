@@ -23,17 +23,17 @@ actor FirestoreVideoListStore {
     }
 
     // MARK: Jay - 캐시가 유효하면 그대로, 아니면 Firestore에서 새로 로드
-    func getOrFetch() async throws -> [FirestoreVideoListDTO] {
+    func getOrFetch(type: VideoListSort) async throws -> [FirestoreVideoListDTO] {
         if let last = lastFetchAt,
            Date().timeIntervalSince(last) < ttl,
            !cache.isEmpty { return cache }
-        return try await loadFirestoreData()
+        return try await loadFirestoreData(type: type)
     }
 
     // MARK: Jay - Firestore에서 강제 갱신
-    func loadFirestoreData() async throws -> [FirestoreVideoListDTO] {
+    func loadFirestoreData(type: VideoListSort) async throws -> [FirestoreVideoListDTO] {
         let snap = try await collection
-            .limit(to: 200)
+            .limit(to: 200).order(by: type.sortBy, descending: false)
             .getDocuments()
 
         let next: [FirestoreVideoListDTO] = snap.documents.compactMap {
@@ -72,5 +72,22 @@ actor FirestoreVideoListStore {
     func stopListening() {
         listener?.remove()
         listener = nil
+    }
+    
+    enum VideoListSort {
+        case createdAtDesc
+        case viewCountDesc
+        case lastWatchedAtDesc
+        
+        var sortBy: String {
+            switch self {
+            case .createdAtDesc:
+                return "createdAt"
+            case .viewCountDesc:
+                return "viewCount"
+            case .lastWatchedAtDesc:
+                return "lastWatchedAt"
+            }
+        }
     }
 }

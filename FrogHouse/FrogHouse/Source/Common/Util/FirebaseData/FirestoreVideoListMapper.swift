@@ -54,23 +54,6 @@ enum FirestoreVideoListMapper {
 
 // MARK: Jay - DTO → VideoDetailItem
 extension FirestoreVideoListMapper {
-    enum VideoListSort {
-        case createdAtDesc
-        case viewCountDesc
-        case lastWatchedAtDesc
-    }
-    
-    static func sortedDTOs(_ dtos: [FirestoreVideoListDTO], sortby: VideoListSort) -> [FirestoreVideoListDTO] {
-        switch sortby {
-        case .createdAtDesc:
-            return dtos.sorted { $0.createdAt?.dateValue() ?? .distantPast > $1.createdAt?.dateValue() ?? .distantPast }
-        case .viewCountDesc:
-            return dtos.sorted (by: sortByViewCount)
-        case .lastWatchedAtDesc:
-            return dtos.sorted { $0.lastWatchedAt?.dateValue() ?? .distantPast > $1.lastWatchedAt?.dateValue() ?? .distantPast }
-        }
-    }
-    
     static func toVideoDetailItem(_ dto: FirestoreVideoListDTO) -> VideoDetailViewModel.VideoDetailItem? {
         let categories: [VideoCategory] = dto.categories.map { VideoCategory(rawValue: $0) ?? .unknown }
         let createdAt = dto.createdAt?.dateValue() ?? .distantPast
