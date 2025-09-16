@@ -80,7 +80,6 @@ final class PlayerControlsView: UIView {
         let button = UIButton(configuration: config)
 
         button.layer.borderWidth = 1
-        button.layer.borderColor = UIColor.FH.primary.cgColor
         button.layer.cornerRadius = 8
         button.titleLabel?.font = .FH.caption(size: 14)
         return button
@@ -95,10 +94,30 @@ final class PlayerControlsView: UIView {
 
         let button = UIButton(configuration: config)
         button.layer.borderWidth = 1
-        button.layer.borderColor = UIColor.FH.primary.cgColor
         button.layer.cornerRadius = 8
         return button
     }()
+    
+    private func applyBorderStyles() {
+        let borderCG = UIColor.FH.primary.color
+            .resolvedColor(with: self.traitCollection).cgColor
+
+        [speedButton, muteButton].forEach {
+            $0.layer.borderColor = borderCG
+        }
+    }
+    
+    override func didMoveToWindow() {
+        super.didMoveToWindow()
+        applyBorderStyles()  
+    }
+
+    override func traitCollectionDidChange(_ previous: UITraitCollection?) {
+        super.traitCollectionDidChange(previous)
+        guard let previous,
+              traitCollection.hasDifferentColorAppearance(comparedTo: previous) else { return }
+        applyBorderStyles()
+    }
     
     // MARK: - Init
     override init(frame: CGRect) {
