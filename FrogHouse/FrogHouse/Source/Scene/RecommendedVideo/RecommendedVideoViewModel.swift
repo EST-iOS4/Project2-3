@@ -49,6 +49,7 @@ final class RecommendedVideoViewModel {
                         self.onCurrentItemChanged?(self.items[self.currentIndex], self.currentIndex, self.items.count)
                     }
                 }
+
             } catch {
                 await MainActor.run {
                     self.onLoadingChanged?(false)
