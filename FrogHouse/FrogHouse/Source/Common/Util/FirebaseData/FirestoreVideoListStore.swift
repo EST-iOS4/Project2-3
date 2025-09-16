@@ -2,120 +2,92 @@
 //  FirestoreVideoListStore.swift
 //  FrogHouse
 //
-//  Created by JAY on 9/16/25.
-//
 
 import Foundation
 import FirebaseFirestore
 
-// MARK: Jay - VideoList DTO 공유 스토어(인메모리 캐시 + 선택적 실시간 구독)
+// MARK: Jay - Firestore VideoList를 앱에서 공유하는 캐시 스토어
 actor FirestoreVideoListStore {
-
-    // MARK: Jay - 싱글톤
     static let shared = FirestoreVideoListStore()
 
-    // MARK: Jay - 내부 상태
     private var cache: [String: FirestoreVideoListDTO] = [:]
     private var lastFetchAt: Date?
     private var listener: ListenerRegistration?
+    
+    private let collection = Firestore.firestore().collection("VideoList")
+    private let ttl: TimeInterval = 60
 
-    // MARK: Jay - 설정
-    private let collectionName = "VideoList"
-    private let defaultOrderField = "viewCount"
-    private let ttl: TimeInterval = 60 // MARK: Jay - 기본 TTL 60초
+    // MARK: Jay - 캐시된 DTO 전부 반환
+    func currentFirestoreData() -> [FirestoreVideoListDTO] { Array(cache.values) }
 
-    // MARK: Jay - 현재 DTO 스냅샷
-    func current() -> [FirestoreVideoListDTO] {
-        Array(cache.values)
+    // MARK: Jay - 캐시가 유효하면 그대로, 아니면 Firestore에서 새로 로드
+    func getOrFetch() async throws -> [FirestoreVideoListDTO] {
+        if let last = lastFetchAt,
+           Date().timeIntervalSince(last) < ttl,
+           !cache.isEmpty { return currentFirestoreData() }
+        return try await loadFirestoreData()
     }
 
-    // MARK: Jay - TTL 고려해서 가져오기
-    func getOrFetch(orderBy field: String? = nil, descending: Bool = true) async throws -> [FirestoreVideoListDTO] {
-        if let last = lastFetchAt, Date().timeIntervalSince(last) < ttl, !cache.isEmpty {
-            return current()
-        }
-        return try await refreshOnce(orderBy: field, descending: descending)
-    }
-
-    // MARK: Jay - 강제 1회 갱신
-    func refreshOnce(orderBy field: String? = nil, descending: Bool = true) async throws -> [FirestoreVideoListDTO] {
-        let db = Firestore.firestore()
-        let orderField = field ?? defaultOrderField
-
-        let snap = try await db.collection(collectionName)
-            .order(by: orderField, descending: descending)
-            .limit(to: 200) // MARK: Jay - 여유분
+    // MARK: Jay - Firestore에서 강제 갱신
+    func loadFirestoreData() async throws -> [FirestoreVideoListDTO] {
+        let snap = try await collection
+            .order(by: "viewCount", descending: true)
+        // MARK: Jay - 현재는 한번에 200개만 불러옴 추후 필요시 tartAfterDocument 같은 페이징 처리
+            .limit(to: 200)
             .getDocuments()
 
         var next: [String: FirestoreVideoListDTO] = [:]
         for doc in snap.documents {
-            do {
-                let dto = try doc.data(as: FirestoreVideoListDTO.self)
+            if let dto = try? doc.data(as: FirestoreVideoListDTO.self) {
                 next[dto.id] = dto
-            } catch {
-                #if DEBUG
-                print("🔥 Jay - decode error for \(doc.documentID):", error)
-                #endif
             }
         }
         cache = next
         lastFetchAt = Date()
-        return current()
+        return currentFirestoreData()
     }
 
-    // MARK: Jay - 실시간 리스닝 시작(선택)
-    func startListening(orderBy field: String? = nil, descending: Bool = true) {
+    // MARK: Jay - id(UUID)로 DTO 조회
+    func dto(for id: UUID) async -> FirestoreVideoListDTO? {
+        cache[id.uuidString] ?? cache[id.uuidString.uppercased()]
+    }
+
+    // MARK: Jay - 실시간 변경 감지 시작
+    func startListening() {
+        // MARK: Jay - 중복 리스너 방지
         guard listener == nil else { return }
-        let db = Firestore.firestore()
-        let orderField = field ?? defaultOrderField
-
-        listener = db.collection(collectionName)
-            .order(by: orderField, descending: descending)
-            .addSnapshotListener { [weak self] snapshot, error in
-                guard let self else { return }
-                if let error {
-                    print("🔥 Jay - snapshot error:", error)
-                    return
-                }
-                guard let snapshot else { return }
-
-                Task { [weak self] in
-                    guard let self else { return }
-                    var next = self.cache
-                    for change in snapshot.documentChanges {
-                        do {
-                            let dto = try change.document.data(as: FirestoreVideoListDTO.self)
-                            switch change.type {
-                            case .added, .modified:
-                                next[dto.id] = dto
-                            case .removed:
-                                next.removeValue(forKey: dto.id)
-                            @unknown default:
-                                break
-                            }
-                        } catch {
-                            #if DEBUG
-                            print("🔥 Jay - live decode error for \(change.document.documentID):", error)
-                            #endif
-                        }
-                    }
-                    self.cache = next
-                    self.lastFetchAt = Date()
-                }
+        
+        listener = collection
+            .order(by: "viewCount", descending: true)
+            .addSnapshotListener { [weak self] snap, _ in
+                guard let self, let snap else { return }
+                // MARK: Jay - actor 격리로 복귀해서 상태 수정
+                Task { await self.applySnapshot(snap) }
             }
     }
 
-    // MARK: Jay - 리스너 해제
+    // MARK: Jay - 스냅샷을 반영
+    private func applySnapshot(_ snapshot: QuerySnapshot) {
+        var next = cache
+        for change in snapshot.documentChanges {
+            if let dto = try? change.document.data(as: FirestoreVideoListDTO.self) {
+                switch change.type {
+                case .added, .modified:
+                    next[dto.id] = dto
+                case .removed:
+                    next.removeValue(forKey: dto.id)
+                @unknown default:
+                    break
+                }
+            }
+        }
+        cache = next
+        lastFetchAt = Date()
+    }
+
+    // MARK: Jay - 실시간 감지 중단
     func stopListening() {
         listener?.remove()
         listener = nil
-    }
-}
-// MARK: Jay - id(UUID)로 DTO 조회 (메모리 캐시)
-extension FirestoreVideoListStore {
-    func dto(for id: UUID) async -> FirestoreVideoListDTO? {
-        let k1 = id.uuidString
-        let k2 = id.uuidString.uppercased()
-        return cache[k1] ?? cache[k2]
     }
 }

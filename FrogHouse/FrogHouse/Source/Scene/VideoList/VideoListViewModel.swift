@@ -6,52 +6,69 @@
 //
 
 import Foundation
+import Combine
+import FirebaseFirestore
 
 final class VideoListViewModel {
-    struct VideoListItem: Hashable {
-        let id: UUID
-        let thumbnailURL: URL?
-        let title: String
-        let descriptionText: String
-        var isLiked: Bool
-        let categories: [VideoCategory]
-        
-        func hash(into hasher: inout Hasher) {
-            hasher.combine(id)
-            hasher.combine(isLiked)
-        }
-        
-        static func ==(lhs: VideoListItem, rhs: VideoListItem) -> Bool {
-            lhs.id == rhs.id && lhs.isLiked == rhs.isLiked
-        }
-    }
     
+    // MARK: Jay - 상태
     private var isLoading = false
     @Published private(set) var videoList: [VideoListItem] = []
     @Published private(set) var categories: [VideoCategory] = VideoCategory.allCases
     @Published private(set) var selectedCategoryIndex: Int = 0
     
-    func selectCategory(at index: Int) throws {
+    func selectCategory(at index: Int) {
         selectedCategoryIndex = index
-        try fetchVideoList()
+        applyFilter(with: videoList)
     }
     
-    func fetchVideoList() throws {
-        let request = Video.fetchRequest()
-        request.sortDescriptors = [NSSortDescriptor(key: "createdAt", ascending: true)]
-        let allVideoList: [VideoListItem] = try PersistenceManager.shared.fetch(request: request).map { .init(id: $0.id, thumbnailURL: $0.thumbnailURL, title: $0.title, descriptionText: $0.descriptionText, isLiked: $0.isLiked, categories: $0.videoCategories) }
-        let selectedCategory = categories[selectedCategoryIndex]
+    func fetchVideoList() {
+        if isLoading { return }
+        isLoading = true
         
-        if selectedCategory == .all {
-            videoList = allVideoList
-        } else {
-            videoList = allVideoList.filter { $0.categories.contains(selectedCategory) }
+        Task { [weak self] in
+            guard let self else { return }
+            defer { self.isLoading = false }
+            
+            do {
+                let dtos = try await FirestoreVideoListStore.shared.loadFirestoreData()
+                let all: [VideoListItem] = dtos.compactMap { FirestoreVideoListMapper.toVideoListItem($0) }
+                await MainActor.run {
+                    self.videoList = self.filtered(all)
+                }
+            } catch {
+                print("fetchVideoList error:", error)
+            }
         }
     }
     
-    func toggleLike(id: UUID, isLiked: Bool) throws {
-        try PersistenceManager.shared.updateVideo(videoID: id) { video in
-            video.isLiked = isLiked
+    func toggleLike(id: UUID, isLiked: Bool) {
+        if let idx = videoList.firstIndex(where: { $0.id == id }) {
+            var item = videoList[idx]
+            item.isLiked = isLiked
+            videoList[idx] = item
+        }
+        Task {
+            do {
+                try await FirestoreCRUDHelper.updateIsLiked(id: id, isLiked: isLiked)
+            } catch {
+                print("❌ 좋아요 업데이트 실패:", error)
+            }
+        }
+    }
+    
+    private func filtered(_ all: [VideoListItem]) -> [VideoListItem] {
+        let selected = categories[selectedCategoryIndex]
+        if selected == .all { return all }
+        return all.filter { $0.categories.contains(selected) }
+    }
+    
+    private func applyFilter(with current: [VideoListItem]) {
+        let selected = categories[selectedCategoryIndex]
+        if selected == .all {
+            videoList = current
+        } else {
+            videoList = current.filter { $0.categories.contains(selected) }
         }
     }
 }
