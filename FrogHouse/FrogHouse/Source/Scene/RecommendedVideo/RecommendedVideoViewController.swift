@@ -7,16 +7,17 @@
 
 import UIKit
 
+// MARK: Jay - 추천 비디오 화면 (BaseViewController 제네릭 기반)
 final class RecommendedVideoViewController: BaseViewController<RecommendedVideoViewModel> {
-    
-    // MARK: Jay - Carousel 형태의 비디오 컬렉션뷰
+
+    // MARK: Jay - 캐러셀/태그 뷰 (기존 코드 그대로)
     private let videoCarouselView = RecommendedVideoCarouselView()
     
     // MARK: Jay - 비디오 태그 리스트뷰
     private let videoTagsView = VideoTagListView(alignment: .left)
     
     override func bind() {
-        // MARK: Jay - 목록이 갱신되면 캐러셀 아이템 세팅 (비동기 로드 반영)
+        // MARK: Jay - 목록 갱신 시 캐러셀 세팅
         viewModel.onListUpdated = { [weak self] models in
             let items = models.map {
                 RecommendedCarouselItem(
@@ -27,39 +28,38 @@ final class RecommendedVideoViewController: BaseViewController<RecommendedVideoV
             }
             self?.videoCarouselView.setItems(items)
         }
-        
-        // MARK: Jay - 현재 인덱스가 바뀌면 태그/접근성/스크롤 반영
+
+        // MARK: Jay - 현재 인덱스 변경 시 UI 반영
         viewModel.onCurrentItemChanged = { [weak self] item, index, total in
             guard let self else { return }
-            // MARK: Jay - 태그 갱신
-            self.videoTagsView.setTags(item.tags)
+            self.videoTagsView.setTags(item.categories.map { $0.title })
             self.accessibilityLabel = "추천 비디오 \(index + 1)/\(total)"
             self.videoCarouselView.scroll(to: index, animated: true)
         }
     }
-    
+
+    // MARK: Jay - UI 설정
     override func setupUI() {
+        super.setupUI()
         navigationItem.title = "TOP 10 – 오늘 뭐 봐?"
-        navigationController?.navigationBar.tintColor = UIColor.FH.primary.color
         videoCarouselView.backgroundColor = .clear
         videoTagsView.backgroundColor = .clear
-        // MARK: Jay - 캐러셀 페이지 변경시 → VM 인덱스 반영
         videoCarouselView.onPageChanged = { [weak self] newIndex in
             self?.viewModel.setCurrentIndex(newIndex)
         }
-        
-        // MARK: Jay - 캐러셀 탭 이벤트 델리게이트 연결
         videoCarouselView.delegate = self
     }
-    
+
+    // MARK: Jay - 레이아웃
     override func setupLayouts() {
         view.addSubview(videoCarouselView)
         view.addSubview(videoTagsView)
     }
-    
+
+    // MARK: Jay - 제약
     override func setupConstraints() {
         let safeArea = view.safeAreaLayoutGuide
-        
+
         videoCarouselView.anchor
             .top(safeArea.topAnchor)
             .leading(safeArea.leadingAnchor)
@@ -68,34 +68,32 @@ final class RecommendedVideoViewController: BaseViewController<RecommendedVideoV
             equalTo: videoCarouselView.widthAnchor,
             multiplier: 4.0/3.0
         ).isActive = true
-        
+
         videoTagsView.anchor
             .top(videoCarouselView.bottomAnchor, offset: 6)
             .leading(safeArea.leadingAnchor, offset: 20)
             .trailing(safeArea.trailingAnchor, offset: 20)
     }
-    
-    // MARK: Jay - Core Data에서 Statistics.viewCount DESC 로 로드
+
+    // MARK: Jay - viewDidLoad >> viewWillAppear로 변경
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         viewModel.load()
     }
-    
-    // MARK: Jay - LifeCycle에 맞게 오토슬라이드 설정
+
+    // MARK: Jay - 오토 슬라이드 라이프사이클
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        // MARK: Jay - 오토슬라이드 시작
         videoCarouselView.startAutoScroll(interval: 3.0)
     }
-    
+
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        // MARK: Jay - 오토슬라이드 정지
         videoCarouselView.stopAutoScroll()
     }
 }
 
-// MARK: Jay - RecommendedVideoCarouselView 에서 전달받은 탭 이벤트 처리
+// MARK: Jay - 캐러셀 셀 선택 처리
 extension RecommendedVideoViewController: RecommendedVideoCarouselViewDelegate {
     func recommendedCarousel(_ view: RecommendedVideoCarouselView, didSelectItemAt index: Int) {
         guard let item = viewModel.item(at: index) else { return }
