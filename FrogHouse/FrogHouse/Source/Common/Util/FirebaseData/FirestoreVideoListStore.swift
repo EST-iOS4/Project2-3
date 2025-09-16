@@ -97,3 +97,11 @@ actor FirestoreVideoListStore {
         }
     }
 }
+// MARK: Jay - id(UUID)로 DTO 조회 (메모리 캐시)
+extension FirestoreVideoListStore {
+    func dto(for id: UUID) async -> FirestoreVideoListDTO? {
+        let k1 = id.uuidString
+        let k2 = id.uuidString.uppercased()
+        return cache[k1] ?? cache[k2]
+    }
+}
