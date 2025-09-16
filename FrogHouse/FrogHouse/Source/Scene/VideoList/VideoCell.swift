@@ -7,7 +7,6 @@
 
 import Combine
 import UIKit
-
 import Kingfisher
 
 final class VideoCell: UICollectionViewCell {
@@ -127,8 +126,7 @@ extension VideoCell {
     
     private func updateState(_ liked: Bool) {
         let buttonImage = UIImage(systemName: liked ? "heart.fill" : "heart")
-        let buttonColor: UIColor = liked ? UIColor.FH.emphasis.color :  UIColor.FH.primary.color  
-
+        let buttonColor: UIColor = liked ? UIColor.FH.emphasis.color :  UIColor.FH.primary.color
         likeButton.setImage(buttonImage, for: .normal)
         likeButton.tintColor = buttonColor
     }

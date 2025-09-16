@@ -52,25 +52,23 @@ final class VideoDetailViewModel: ObservableObject {
     func resetPlayer() { playManager.reset() }
     func play() { playManager.play() }
     
-    func fetchVideo() throws {
-        isLoading = true
-        let request = Video.fetchRequest()
-        request.predicate = NSPredicate(format: "id == %@", id as CVarArg)
-        let videoList = try PersistenceManager.shared.fetch(request: request)
-        guard let selectedVideo = videoList.first else { return }
-        playManager.loadVideo(url: selectedVideo.mp4URL)
-        
-        // MARK: - indicator 테스트용 딜레이 0.5초
-        DispatchQueue.global().asyncAfter(deadline: .now() + 0.5) {
-            self.video = .init(title: selectedVideo.title, descriptionText: selectedVideo.descriptionText, thumbnailURL: selectedVideo.thumbnailURL, viewCount: Int(selectedVideo.statistics.viewCount), categories: selectedVideo.videoCategories, createdAt: selectedVideo.createdAt, isLiked: selectedVideo.isLiked)
-            self.isLoading = false
+    // MARK: Jay - Firestore 캐시에서 DTO 조회 → DetailItem 매핑 → 플레이어 로드
+    func fetchVideo() async throws {
+        Task {
+            isLoading = true
+            defer { isLoading = false }
+            if let dto = try await FirestoreVideoListStore.shared.getDto(for: id),
+               let detail = FirestoreVideoListMapper.toVideoDetailItem(dto) {
+                if let mp4 = URL(string: dto.mp4URL) {
+                    self.playManager.loadVideo(url: mp4)
+                }
+                self.video = detail
+            }
         }
     }
     
-    func toggleLike(isLiked: Bool) throws {
-        try PersistenceManager.shared.updateVideo(videoID: id) { video in
-            video.isLiked = isLiked
-        }
+    func toggleLike(isLiked: Bool) async throws {
+        try await FirestoreCRUDHelper.updateIsLiked(id: id, isLiked: isLiked)
     }
     
     private func bindManager() {
