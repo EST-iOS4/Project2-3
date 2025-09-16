@@ -53,7 +53,7 @@ final class VideoDetailViewController: BaseViewController<VideoDetailViewModel> 
     
     private var playerLayer: AVPlayerLayer?
     
-    private let videoTagsView = VideoTagListView()
+    private let videoTagsView = VideoTagListView(alignment: .center)
     
     private let titleLabel: UILabel = {
         let label = UILabel()
@@ -144,7 +144,7 @@ final class VideoDetailViewController: BaseViewController<VideoDetailViewModel> 
         super.setupLayouts()
         view.addSubview(scrollView)
         scrollView.addSubview(containerStackView)
-        [playerContainerView, playerControlsView, titleLabel, descriptionLabel, videoTagsView, statisticsLabel].forEach { containerStackView.addArrangedSubview($0) }
+        [playerContainerView, playerControlsView, titleLabel, descriptionLabel, statisticsLabel, videoTagsView].forEach { containerStackView.addArrangedSubview($0) }
         [feedbackImageView, indicatorView, fullscreenButton].forEach { playerContainerView.addSubview($0) }
     }
     
@@ -167,6 +167,10 @@ final class VideoDetailViewController: BaseViewController<VideoDetailViewModel> 
             .bottom(playerContainerView.bottomAnchor)
             .trailing(playerContainerView.trailingAnchor)
         indicatorView.pinToSuperview()
+        
+        containerStackView.setCustomSpacing(25, after: playerControlsView)
+        containerStackView.setCustomSpacing(25, after: titleLabel)
+        containerStackView.setCustomSpacing(25, after: statisticsLabel)
     }
     
     override func setupUI() {

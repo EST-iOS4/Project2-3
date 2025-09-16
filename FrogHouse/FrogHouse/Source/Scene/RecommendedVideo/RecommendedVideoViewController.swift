@@ -13,7 +13,7 @@ final class RecommendedVideoViewController: BaseViewController<RecommendedVideoV
     private let videoCarouselView = RecommendedVideoCarouselView()
     
     // MARK: Jay - 비디오 태그 리스트뷰
-    private let videoTagsView = VideoTagListView()
+    private let videoTagsView = VideoTagListView(alignment: .left)
     
     override func bind() {
         // MARK: Jay - 목록이 갱신되면 캐러셀 아이템 세팅 (비동기 로드 반영)

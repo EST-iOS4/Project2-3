@@ -9,16 +9,13 @@ import UIKit
 
 // MARK: Jay - 태그 셀
 final class VideoTagCell: UICollectionViewCell {
-    
-    // MARK: Jay - Identifier >> 수정예정
-    static let reuseID = "RecommendedVideoTagCell"
+    static let reuseID = String(describing: VideoTagCell.self)
     
     private let label: PaddingLabel = {
-        let lb = PaddingLabel(insets: UIEdgeInsets(top: 2, left: 6, bottom: 2, right: 6))
-        lb.font = .preferredFont(forTextStyle: .footnote)
-        lb.font = .systemFont(ofSize: lb.font.pointSize, weight: .bold)
-        lb.textColor = .secondaryLabel
-        lb.backgroundColor = .systemGreen.withAlphaComponent(0.12)
+        let lb = PaddingLabel(insets: UIEdgeInsets(top: 8, left: 10, bottom: 8, right: 10))
+        lb.font = .FH.amount(size: 13)
+        lb.textColor = .FH.primary.color
+        lb.backgroundColor = .FH.signatureGreen.color.withAlphaComponent(0.35)
         lb.layer.cornerRadius = 6
         lb.clipsToBounds = true
         lb.numberOfLines = 1
@@ -36,12 +33,5 @@ final class VideoTagCell: UICollectionViewCell {
     
     func configure(text: String) {
         label.text = text
-    }
-    
-    // MARK: Jay - 한 줄 높이 계산 (기기별 폰트사이즈대응)
-    static func singleLineHeightForCurrentStyle() -> CGFloat {
-        let font = UIFont.preferredFont(forTextStyle: .footnote)
-        let labelHeight = ceil(font.lineHeight) + 2 + 2
-        return labelHeight
     }
 }
