@@ -33,7 +33,6 @@ actor FirestoreVideoListStore {
     // MARK: Jay - Firestore에서 강제 갱신
     func loadFirestoreData() async throws -> [FirestoreVideoListDTO] {
         let snap = try await collection
-            .order(by: "createdAt", descending: true)
             .limit(to: 200)
             .getDocuments()
 
@@ -54,7 +53,6 @@ actor FirestoreVideoListStore {
     func startListening() {
         guard listener == nil else { return }
         listener = collection
-            .order(by: "createdAt", descending: true)
             .addSnapshotListener { [weak self] snap, _ in
                 guard let self, let snap else { return }
                 Task { await self.applySnapshot(snap) }
