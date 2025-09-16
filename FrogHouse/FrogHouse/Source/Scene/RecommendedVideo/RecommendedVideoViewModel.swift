@@ -30,7 +30,6 @@ final class RecommendedVideoViewModel {
     init(store: FirestoreVideoListStore = .shared) {
         self.store = store
         // MARK: Jay - 필요 시 실시간 리스닝 (원치 않으면 주석 처리)
-        // store.startListening()
     }
 
     // MARK: Jay - 로드 (캐시 우선, TTL 지나면 자동 갱신)
@@ -50,6 +49,7 @@ final class RecommendedVideoViewModel {
                         self.onCurrentItemChanged?(self.items[self.currentIndex], self.currentIndex, self.items.count)
                     }
                 }
+
             } catch {
                 await MainActor.run {
                     self.onLoadingChanged?(false)

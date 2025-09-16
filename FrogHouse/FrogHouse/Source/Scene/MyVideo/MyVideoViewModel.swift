@@ -9,33 +9,43 @@ import Combine
 import Foundation
 
 final class MyVideoViewModel {
-    @Published private(set) var historyVideoModel: [Video] = []
-    @Published private(set) var likedVideoModel: [Video] = []
-    
-    func fetchMyVideoModel() throws {
-        let historyRequest = Video.fetchRequest()
-        historyRequest.predicate = NSPredicate(format: "statistics.viewCount > 0")
-        historyRequest.sortDescriptors = [NSSortDescriptor(key: "createdAt", ascending: false)]
-        historyRequest.fetchLimit = 5
-        
-        let historyVideos = try PersistenceManager.shared.fetch(request: historyRequest)
-        historyVideoModel = historyVideos
-        
-        let request = Video.fetchRequest()
-        request.sortDescriptors = [NSSortDescriptor(key: "createdAt", ascending: true)]
-        request.predicate = NSPredicate(format: "isLiked == %@", NSNumber(value: true))
-        
-        let likedVideos = try PersistenceManager.shared.fetch(request: request)
-        likedVideoModel = likedVideos
+    struct HistoryVideoItem: Hashable {
+        let id: UUID
+        let thumbnailURL: URL?
+        let title: String
     }
     
-    func cancelLike(at video: Video) throws {
-        guard let selectedIndex = likedVideoModel.firstIndex(where: { $0.id == video.id }) else { return }
+    struct LikedVideoItem: Hashable {
+        let id: UUID
+        let thumbnailURL: URL?
+        let title: String
+        let description: String
+        let isLiked: Bool
+    }
+    
+    @Published private(set) var historyVideoModel: [HistoryVideoItem] = []
+    @Published private(set) var likedVideoModel: [LikedVideoItem] = []
+    
+    func fetchMyVideoViewModel() async throws {
+        let dtos = try await FirestoreVideoListStore.shared.loadFirestoreData(type: .viewCountDesc)
         
-        try PersistenceManager.shared.updateVideo(videoID: video.id) { video in
-            video.isLiked = false
+        let history: [MyVideoViewModel.HistoryVideoItem] = dtos
+            .filter { $0.lastWatchedAt != nil }
+            .compactMap { FirestoreVideoListMapper.toHistoryListItem(dto: $0) }
+        
+        let liked: [MyVideoViewModel.LikedVideoItem] = dtos
+            .filter { $0.isLiked == true } // 좋아요 누른 영상만
+            .compactMap { FirestoreVideoListMapper.toLikedListItem(dto: $0) }
+
+        self.historyVideoModel = Array(history.prefix(5))
+        self.likedVideoModel = liked
+    }
+    
+    func cancelLike(at item: LikedVideoItem) async throws {
+        try await FirestoreCRUDHelper.updateIsLiked(id: item.id, isLiked: false)
+        
+        await MainActor.run {
+            likedVideoModel.removeAll { $0.id == item.id }
         }
-        
-        likedVideoModel[selectedIndex].isLiked = false
     }
 }

@@ -8,6 +8,6 @@
 import Foundation
 
 enum MyVideoItem: Hashable {
-    case history(Video)
-    case like(Video)
+    case history(MyVideoViewModel.HistoryVideoItem)
+    case like(MyVideoViewModel.LikedVideoItem)
 }
