@@ -265,10 +265,12 @@ final class VideoListViewController: BaseViewController<VideoListViewModel> {
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        do {
-            try viewModel.fetchVideoList()
-        } catch {
-            showSnackBar(type: .fetchVideo(false))
+        Task {
+            do {
+                try await viewModel.fetchVideoList()
+            } catch {
+                showSnackBar(type: .fetchVideo(false))
+            }
         }
     }
 
@@ -368,10 +370,12 @@ final class VideoListViewController: BaseViewController<VideoListViewModel> {
 
     @objc
     private func didPullToRefresh() {
-        do {
-            try viewModel.fetchVideoList()
-        } catch {
-            showSnackBar(type: .fetchVideo(false))
+        Task {
+            do {
+                try await viewModel.fetchVideoList()
+            } catch {
+                showSnackBar(type: .fetchVideo(false))
+            }
         }
     }
 }

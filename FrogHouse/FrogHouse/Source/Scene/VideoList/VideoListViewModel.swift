@@ -22,32 +22,22 @@ final class VideoListViewModel {
         applyFilter(with: videoList)
     }
     
-    func fetchVideoList() {
+    func fetchVideoList() async throws {
         if isLoading { return }
         isLoading = true
-
-        Task { [weak self] in
-            guard let self else { return }
-            defer { self.isLoading = false }
-            do {
-                let dtos = try await FirestoreVideoListStore.shared.loadFirestoreData()
-                let sorted = FirestoreVideoListMapper.sortedDTOs(
-                    dtos,
-                    sortby: .createdAtDesc
-                )
-                let all: [VideoListItem] = sorted.compactMap {
-                    FirestoreVideoListMapper.toVideoListItem($0)
-                }
-                await MainActor.run {
-                    self.videoList = self.filtered(all)
-                }
-            } catch {
-                print("fetchVideoList error:", error)
-            }
+        defer { isLoading = false }
+        
+        let dtos = try await FirestoreVideoListStore.shared.loadFirestoreData()
+        let sorted = FirestoreVideoListMapper.sortedDTOs(
+            dtos,
+            sortby: .createdAtDesc
+        )
+        let all: [VideoListItem] = sorted.compactMap {
+            FirestoreVideoListMapper.toVideoListItem($0)
         }
+        self.videoList = self.filtered(all)
     }
 
-    
     func toggleLike(id: UUID, isLiked: Bool) {
         if let idx = videoList.firstIndex(where: { $0.id == id }) {
             var item = videoList[idx]
