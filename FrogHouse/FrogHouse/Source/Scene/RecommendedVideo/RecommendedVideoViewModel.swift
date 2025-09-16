@@ -38,25 +38,20 @@ final class RecommendedVideoViewModel {
         Task {
             await MainActor.run { onLoadingChanged?(true) }
             do {
-                // MARK: Jay - DTO 가져오기 (캐시 유효하면 캐시, 아니면 Firestore에서 갱신)
+                // 1️⃣ Firestore DTO 배열 가져오기
                 let dtos = try await store.getOrFetch()
-
-                // MARK: Jay - 정렬 (lastWatchedAt 우선 → viewCount)
-                let sorted = dtos.sorted(by: FirestoreVideoListMapper.sortByRecentThenViewCount)
-
-                // MARK: Jay - 매핑 후 상위 N개만 사용
-                var tmp: [RecommendedVideoItem] = []
-                tmp.reserveCapacity(maxCount)
-                for dto in sorted {
-                    if let m = FirestoreVideoListMapper.toRecommendedVideoItem(dto) {
-                        tmp.append(m)
-                        if tmp.count >= maxCount { break }
-                    }
-                }
-
-                // MARK: Jay - Swift 6 동시성: 불변 스냅샷으로 UI 업데이트
-                let finalModels = tmp
-                await MainActor.run { [finalModels] in
+                // 2️⃣ viewCount 기준으로 내림차순 정렬
+                let sorted = FirestoreVideoListMapper.sortedDTOs(
+                    dtos,
+                    sortby: .viewCountDesc
+                )
+                // 3️⃣ 매핑 후 상위 N개만 사용
+                let finalModels: [RecommendedVideoItem] =
+                    sorted.compactMap(FirestoreVideoListMapper.toRecommendedVideoItem)
+                          .prefix(maxCount)
+                          .map { $0 }
+                // 4️⃣ UI 업데이트
+                await MainActor.run {
                     self.items = finalModels
                     self.currentIndex = min(self.currentIndex, max(0, self.items.count - 1))
                     self.onListUpdated?(self.items)
@@ -65,7 +60,6 @@ final class RecommendedVideoViewModel {
                         self.onCurrentItemChanged?(self.items[self.currentIndex], self.currentIndex, self.items.count)
                     }
                 }
-
             } catch {
                 await MainActor.run {
                     self.onLoadingChanged?(false)

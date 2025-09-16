@@ -25,14 +25,19 @@ final class VideoListViewModel {
     func fetchVideoList() {
         if isLoading { return }
         isLoading = true
-        
+
         Task { [weak self] in
             guard let self else { return }
             defer { self.isLoading = false }
-            
             do {
                 let dtos = try await FirestoreVideoListStore.shared.loadFirestoreData()
-                let all: [VideoListItem] = dtos.compactMap { FirestoreVideoListMapper.toVideoListItem($0) }
+                let sorted = FirestoreVideoListMapper.sortedDTOs(
+                    dtos,
+                    sortby: .createdAtDesc
+                )
+                let all: [VideoListItem] = sorted.compactMap {
+                    FirestoreVideoListMapper.toVideoListItem($0)
+                }
                 await MainActor.run {
                     self.videoList = self.filtered(all)
                 }
@@ -41,6 +46,7 @@ final class VideoListViewModel {
             }
         }
     }
+
     
     func toggleLike(id: UUID, isLiked: Bool) {
         if let idx = videoList.firstIndex(where: { $0.id == id }) {

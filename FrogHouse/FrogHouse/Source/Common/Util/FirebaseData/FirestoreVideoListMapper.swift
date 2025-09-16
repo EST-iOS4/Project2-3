@@ -45,14 +45,6 @@ enum FirestoreVideoListMapper {
         )
     }
     
-    // MARK: Jay - 정렬 유틸 (예: lastWatchedAt 우선 → viewCount)
-    static func sortByRecentThenViewCount(_ lhs: FirestoreVideoListDTO, _ rhs: FirestoreVideoListDTO) -> Bool {
-        let l = lhs.lastWatchedAt?.dateValue() ?? .distantPast
-        let r = rhs.lastWatchedAt?.dateValue() ?? .distantPast
-        if l != r { return l > r }
-        return lhs.viewCount > rhs.viewCount
-    }
-    
     // MARK: Jay - 순수 viewCount 기준 정렬
     static func sortByViewCount(_ lhs: FirestoreVideoListDTO, _ rhs: FirestoreVideoListDTO) -> Bool {
         lhs.viewCount > rhs.viewCount
@@ -62,6 +54,23 @@ enum FirestoreVideoListMapper {
 
 // MARK: Jay - DTO → VideoDetailItem
 extension FirestoreVideoListMapper {
+    enum VideoListSort {
+        case createdAtDesc
+        case viewCountDesc
+        case lastWatchedAtDesc
+    }
+    
+    static func sortedDTOs(_ dtos: [FirestoreVideoListDTO], sortby: VideoListSort) -> [FirestoreVideoListDTO] {
+        switch sortby {
+        case .createdAtDesc:
+            return dtos.sorted { $0.createdAt?.dateValue() ?? .distantPast > $1.createdAt?.dateValue() ?? .distantPast }
+        case .viewCountDesc:
+            return dtos.sorted (by: sortByViewCount)
+        case .lastWatchedAtDesc:
+            return dtos.sorted { $0.lastWatchedAt?.dateValue() ?? .distantPast > $1.lastWatchedAt?.dateValue() ?? .distantPast }
+        }
+    }
+    
     static func toVideoDetailItem(_ dto: FirestoreVideoListDTO) -> VideoDetailViewModel.VideoDetailItem? {
         let categories: [VideoCategory] = dto.categories.map { VideoCategory(rawValue: $0) ?? .unknown }
         let createdAt = dto.createdAt?.dateValue() ?? .distantPast
