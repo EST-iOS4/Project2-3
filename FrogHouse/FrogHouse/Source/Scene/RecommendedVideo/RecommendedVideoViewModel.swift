@@ -11,13 +11,13 @@ import Foundation
 final class RecommendedVideoViewModel {
 
     // MARK: Jay - Outputs
-    var onCurrentItemChanged: ((RecommendedVideoModel, Int, Int) -> Void)?
-    var onListUpdated: (([RecommendedVideoModel]) -> Void)?
+    var onCurrentItemChanged: ((RecommendedVideoItem, Int, Int) -> Void)?
+    var onListUpdated: (([RecommendedVideoItem]) -> Void)?
     var onLoadingChanged: ((Bool) -> Void)?
     var onError: ((String) -> Void)?
 
     // MARK: Jay - Data
-    private(set) var items: [RecommendedVideoModel] = []
+    private(set) var items: [RecommendedVideoItem] = []
     private(set) var currentIndex: Int = 0 { didSet { notifyChange() } }
 
     // MARK: Jay - 제한
@@ -45,10 +45,10 @@ final class RecommendedVideoViewModel {
                 let sorted = dtos.sorted(by: FirestoreVideoListMapper.sortByRecentThenViewCount)
 
                 // MARK: Jay - 매핑 후 상위 N개
-                var models: [RecommendedVideoModel] = []
+                var models: [RecommendedVideoItem] = []
                 models.reserveCapacity(maxCount)
                 for dto in sorted {
-                    if let m = FirestoreVideoListMapper.toRecommendedVideoModel(dto) {
+                    if let m = FirestoreVideoListMapper.toRecommendedVideoItem(dto) {
                         models.append(m)
                         if models.count >= maxCount { break }
                     }
@@ -79,7 +79,7 @@ final class RecommendedVideoViewModel {
     }
 
     // MARK: Jay - 아이템 접근
-    func item(at index: Int) -> RecommendedVideoModel? {
+    func item(at index: Int) -> RecommendedVideoItem? {
         guard items.indices.contains(index) else { return nil }
         return items[index]
     }

@@ -52,18 +52,23 @@ final class VideoDetailViewModel: ObservableObject {
     func resetPlayer() { playManager.reset() }
     func play() { playManager.play() }
     
-    func fetchVideo() throws {
+    // MARK: Jay - Firestore 캐시에서 DTO 조회 → DetailItem 매핑 → 플레이어 로드
+    func fetchVideo() {
         isLoading = true
-        let request = Video.fetchRequest()
-        request.predicate = NSPredicate(format: "id == %@", id as CVarArg)
-        let videoList = try PersistenceManager.shared.fetch(request: request)
-        guard let selectedVideo = videoList.first else { return }
-        playManager.loadVideo(url: selectedVideo.mp4URL)
-        
-        // MARK: - indicator 테스트용 딜레이 0.5초
-        DispatchQueue.global().asyncAfter(deadline: .now() + 0.5) {
-            self.video = .init(title: selectedVideo.title, descriptionText: selectedVideo.descriptionText, thumbnailURL: selectedVideo.thumbnailURL, viewCount: Int(selectedVideo.statistics.viewCount), categories: selectedVideo.videoCategories, createdAt: selectedVideo.createdAt, isLiked: selectedVideo.isLiked)
-            self.isLoading = false
+        Task { [weak self] in
+            guard let self else { return }
+            if let dto = await FirestoreVideoListStore.shared.dto(for: id),
+               let detail = FirestoreVideoListMapper.toVideoDetailItem(dto) {
+                await MainActor.run {
+                    if let mp4 = URL(string: dto.mp4URL) {
+                        self.playManager.loadVideo(url: mp4)
+                    }
+                    self.video = detail
+                    self.isLoading = false
+                }
+                return
+            }
+            await MainActor.run { self.isLoading = false }
         }
     }
     

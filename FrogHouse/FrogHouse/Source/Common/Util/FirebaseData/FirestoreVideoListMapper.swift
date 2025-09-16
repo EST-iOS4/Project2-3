@@ -14,39 +14,37 @@ enum FirestoreVideoListMapper {
     private static func stringToCategory(_ str: String) -> VideoCategory {
         VideoCategory(rawValue: str) ?? .unknown
     }
-
-    // MARK: Jay - DTO → RecommendedVideoModel
-    static func toRecommendedVideoModel(_ dto: FirestoreVideoListDTO) -> RecommendedVideoModel? {
+    
+    // MARK: Jay - DTO → toRecommendedVideoItem
+    static func toRecommendedVideoItem(_ dto: FirestoreVideoListDTO) -> RecommendedVideoItem? {
         guard let uuid = UUID(uuidString: dto.id) else { return nil }
         guard let thumb = URL(string: dto.thumbnailURL) else { return nil }
-
-        return RecommendedVideoModel(
+        let categories = dto.categories.map { stringToCategory($0) }
+        return RecommendedVideoItem(
             id: uuid,
             title: dto.title,
             detail: dto.description,
-            categories: dto.categories,
+            categories: categories,
             thumbnailURL: thumb
         )
     }
-
     
-//    // MARK: Jay - DTO → VideoListItem
-//    static func toVideoListItem(_ dto: FirestoreVideoListDTO) -> VideoListItem? {
-//        guard let uuid = UUID(uuidString: dto.id) else { return nil }
-//        let thumb = URL(string: dto.thumbnailURL)
-//
-//        let categories = dto.categories.map { stringToCategory($0) }
-//
-//        return VideoListItem(
-//            id: uuid,
-//            thumbnailURL: thumb,
-//            title: dto.title,
-//            descriptionText: dto.description,
-//            isLiked: dto.isLiked ?? false,
-//            categories: categories
-//        )
-//    }
-
+    
+    // MARK: Jay - DTO → VideoListItem
+    static func toVideoListItem(_ dto: FirestoreVideoListDTO) -> VideoListItem? {
+        guard let uuid = UUID(uuidString: dto.id) else { return nil }
+        let thumb = URL(string: dto.thumbnailURL)
+        let categories = dto.categories.map { stringToCategory($0) }
+        return VideoListItem(
+            id: uuid,
+            thumbnailURL: thumb,
+            title: dto.title,
+            descriptionText: dto.description,
+            isLiked: dto.isLiked ?? false,
+            categories: categories
+        )
+    }
+    
     // MARK: Jay - 정렬 유틸 (예: lastWatchedAt 우선 → viewCount)
     static func sortByRecentThenViewCount(_ lhs: FirestoreVideoListDTO, _ rhs: FirestoreVideoListDTO) -> Bool {
         let l = lhs.lastWatchedAt?.dateValue() ?? .distantPast
@@ -54,9 +52,28 @@ enum FirestoreVideoListMapper {
         if l != r { return l > r }
         return lhs.viewCount > rhs.viewCount
     }
-
+    
     // MARK: Jay - 순수 viewCount 기준 정렬
     static func sortByViewCount(_ lhs: FirestoreVideoListDTO, _ rhs: FirestoreVideoListDTO) -> Bool {
         lhs.viewCount > rhs.viewCount
+    }
+}
+
+
+// MARK: Jay - DTO → VideoDetailItem
+extension FirestoreVideoListMapper {
+    static func toVideoDetailItem(_ dto: FirestoreVideoListDTO) -> VideoDetailViewModel.VideoDetailItem? {
+        let categories: [VideoCategory] = dto.categories.map { VideoCategory(rawValue: $0) ?? .unknown }
+        let createdAt = dto.createdAt?.dateValue() ?? .distantPast
+        let thumb = URL(string: dto.thumbnailURL)
+        return VideoDetailViewModel.VideoDetailItem(
+            title: dto.title,
+            descriptionText: dto.description,
+            thumbnailURL: thumb,
+            viewCount: dto.viewCount,
+            categories: categories,
+            createdAt: createdAt,
+            isLiked: dto.isLiked ?? false
+        )
     }
 }

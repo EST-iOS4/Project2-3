@@ -32,7 +32,7 @@ final class RecommendedVideoViewController: BaseViewController<RecommendedVideoV
         // MARK: Jay - 현재 인덱스 변경 시 UI 반영
         viewModel.onCurrentItemChanged = { [weak self] item, index, total in
             guard let self else { return }
-            self.videoTagsView.setTags(item.categories)
+            self.videoTagsView.setTags(item.categories.map { $0.title })
             self.accessibilityLabel = "추천 비디오 \(index + 1)/\(total)"
             self.videoCarouselView.scroll(to: index, animated: true)
         }

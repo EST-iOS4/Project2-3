@@ -34,7 +34,7 @@
 import Foundation
 
 // MARK: Jay - 추천 섹션에서 사용할 경량 모델 (Hashable)
-struct RecommendedVideoModel: Hashable {
+struct RecommendedVideoItem: Hashable {
     // MARK: Jay - 고유 식별자
     let id: UUID
     // MARK: Jay - 제목
@@ -42,7 +42,7 @@ struct RecommendedVideoModel: Hashable {
     // MARK: Jay - 상세 설명
     let detail: String
     // MARK: Jay - 태그(카테고리 문자열)
-    let categories: [String]
+    let categories: [VideoCategory]
     // MARK: Jay - 썸네일 URL
     let thumbnailURL: URL
 
