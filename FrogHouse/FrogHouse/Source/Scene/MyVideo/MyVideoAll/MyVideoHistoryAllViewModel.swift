@@ -42,19 +42,10 @@ final class MyVideoHistoryAllViewModel {
 //        }
 //        videoList[selectedIndex].isLiked = updatedVideoState
 //    }
-    func fetchVideoList() {
-        Task { [weak self] in
-            guard let self else { return }
-            do {
-                let dtos = try await FirestoreVideoListStore.shared.loadFirestoreData()
-                await MainActor.run {
-                    let all: [VideoListAllItem] = dtos.compactMap { FirestoreVideoListMapper.toVideoListAllItem($0) }
-                    self.videoList = all.filter { $0.viewCount > 0 }
-                }
-            } catch {
-                print("fetchVideoList error:", error)
-            }
-        }
+    func fetchVideoList() async throws {
+        let dtos = try await FirestoreVideoListStore.shared.loadFirestoreData()
+        let all: [VideoListAllItem] = dtos.compactMap { FirestoreVideoListMapper.toVideoListAllItem($0) }
+        self.videoList = all.filter { $0.viewCount > 0 }
     }
     
     func toggleLike(id: UUID, isLiked: Bool) {

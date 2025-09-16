@@ -26,10 +26,12 @@ final class MyVideoViewController: BaseViewController<MyVideoViewModel> {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        do {
-            viewModel.fetchMyVideoViewModel()
-        } catch {
-            showSnackBar(type: .fetchVideo(false))
+        Task {
+            do {
+                try await viewModel.fetchMyVideoViewModel()
+            } catch {
+                showSnackBar(type: .fetchVideo(false))
+            }
         }
     }
     

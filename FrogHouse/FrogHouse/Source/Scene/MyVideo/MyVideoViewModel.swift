@@ -26,26 +26,20 @@ final class MyVideoViewModel {
     @Published private(set) var historyVideoModel: [HistoryVideoItem] = []
     @Published private(set) var likedVideoModel: [LikedVideoItem] = []
     
-    func fetchMyVideoViewModel() {
-        Task {
-            let dtos = try await FirestoreVideoListStore.shared.getOrFetch()
-            
-            // 시청 기록
-            let history: [MyVideoViewModel.HistoryVideoItem] = dtos
-                .filter { $0.lastWatchedAt != nil } // 시청 기록이 있는 영상만
-                .sorted { $0.lastWatchedAt!.dateValue() > $1.lastWatchedAt!.dateValue() } // 최신순으로 정렬
-                .compactMap { FirestoreVideoListMapper.toHistoryListItem($0) }
-            
-            // 좋아요 누른 영상
-            let liked: [MyVideoViewModel.LikedVideoItem] = dtos
-                .filter { $0.isLiked == true } // 좋아요 누른 영상만
-                .compactMap { FirestoreVideoListMapper.toLikedListItem($0) }
+    func fetchMyVideoViewModel() async throws {
+        let dtos = try await FirestoreVideoListStore.shared.getOrFetch()
+        
+        let history: [MyVideoViewModel.HistoryVideoItem] = dtos
+            .filter { $0.lastWatchedAt != nil }
+            .sorted { $0.lastWatchedAt!.dateValue() > $1.lastWatchedAt!.dateValue() }
+            .compactMap { FirestoreVideoListMapper.toHistoryListItem($0) }
+        
+        let liked: [MyVideoViewModel.LikedVideoItem] = dtos
+            .filter { $0.isLiked == true } // 좋아요 누른 영상만
+            .compactMap { FirestoreVideoListMapper.toLikedListItem($0) }
 
-            await MainActor.run {
-                self.historyVideoModel = Array(history.prefix(5))
-                self.likedVideoModel = liked
-            }
-        }
+        self.historyVideoModel = Array(history.prefix(5))
+        self.likedVideoModel = liked
     }
     
     func cancelLike(at item: LikedVideoItem) async throws {

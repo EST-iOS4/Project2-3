@@ -29,10 +29,12 @@ final class MyVideoHistoryAllViewController: BaseViewController<MyVideoHistoryAl
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        do {
-            try viewModel.fetchVideoList()
-        } catch {
-            showSnackBar(type: .fetchVideo(false))
+        Task {
+            do {
+                try await viewModel.fetchVideoList()
+            } catch {
+                showSnackBar(type: .fetchVideo(false))
+            }
         }
     }
     
