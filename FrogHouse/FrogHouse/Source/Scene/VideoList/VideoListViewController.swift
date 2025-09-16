@@ -400,6 +400,21 @@ extension VideoListViewController {
                 thumbnailImageURL: videoItem.thumbnailURL
             )
 
+//            cell.onLikeTapped = { [weak self] in
+//                guard
+//                    let self,
+//                    let selectedIndexPath = collectionView.indexPath(for: cell),
+//                    let item = self.dataSource.itemIdentifier(for: selectedIndexPath)
+//                else { return }
+//
+//                do {
+//                    try await self.viewModel.toggleLike(id: item.id, isLiked: !cell.isLiked)
+//                    cell.isLiked.toggle()
+//                    self.showSnackBar(type: cell.isLiked ? .updateLikedState(true) : .updateUnLikedState(true))
+//                } catch {
+//                    self.showSnackBar(type: cell.isLiked ? .updateLikedState(false) : .updateUnLikedState(false))
+//                }
+//            }
             cell.onLikeTapped = { [weak self] in
                 guard
                     let self,

@@ -11,7 +11,7 @@ final class MyVideoHistoryAllViewController: BaseViewController<MyVideoHistoryAl
     enum Section: Int, Hashable {
         case main
     }
-    private var dataSource: UICollectionViewDiffableDataSource<Section, Video>!
+    private var dataSource: UICollectionViewDiffableDataSource<Section, MyVideoHistoryAllViewModel.VideoListAllItem>!
     
     private let emptyView = EmptyView(state: .noVideo)
     
@@ -72,7 +72,7 @@ final class MyVideoHistoryAllViewController: BaseViewController<MyVideoHistoryAl
 // MARK: - Setup DataSource
 extension MyVideoHistoryAllViewController {
     private func setupDataSource() {
-        dataSource = UICollectionViewDiffableDataSource<Section, Video>(collectionView: videoCollectionView) { collectionView, indexPath, videoItem in
+        dataSource = UICollectionViewDiffableDataSource<Section, MyVideoHistoryAllViewModel.VideoListAllItem>(collectionView: videoCollectionView) { collectionView, indexPath, videoItem in
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: VideoCell.reuseIdentifier, for: indexPath) as? VideoCell ?? VideoCell()
             cell.configure(
                 title: videoItem.title,
@@ -82,23 +82,28 @@ extension MyVideoHistoryAllViewController {
             )
             
             cell.onLikeTapped = { [weak self] in
-                guard let self,
-                      let selectedIndexPath = collectionView.indexPath(for: cell),
-                      let item = self.dataSource.itemIdentifier(for: selectedIndexPath) else { return }
-                do {
-                    try self.viewModel.toggleLike(at: item)
-                    cell.isLiked = !item.isLiked
-                    showSnackBar(type: item.isLiked ? .updateLikedState(true) : .updateUnLikedState(true))
-                } catch {
-                    showSnackBar(type: item.isLiked ? .updateLikedState(false) : .updateUnLikedState(false))
+                Task {
+                    guard
+                        let self,
+                        let selectedIndexPath = collectionView.indexPath(for: cell),
+                        let item = self.dataSource.itemIdentifier(for: selectedIndexPath)
+                    else { return }
+
+                    do {
+                        try await self.viewModel.toggleLike(id: item.id, isLiked: !cell.isLiked)
+                        cell.isLiked.toggle()
+                        self.showSnackBar(type: cell.isLiked ? .updateLikedState(true) : .updateUnLikedState(true))
+                    } catch {
+                        self.showSnackBar(type: cell.isLiked ? .updateLikedState(false) : .updateUnLikedState(false))
+                    }
                 }
             }
             return cell
         }
     }
     
-    func applySnapshot(videoItems: [Video]) {
-        var snapshot = NSDiffableDataSourceSnapshot<Section, Video>()
+    func applySnapshot(videoItems: [MyVideoHistoryAllViewModel.VideoListAllItem]) {
+        var snapshot = NSDiffableDataSourceSnapshot<Section, MyVideoHistoryAllViewModel.VideoListAllItem>()
         snapshot.appendSections([.main])
         snapshot.appendItems(videoItems)
         dataSource.apply(snapshot, animatingDifferences: true)

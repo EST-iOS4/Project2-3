@@ -19,15 +19,15 @@ final class MyVideoViewController: BaseViewController<MyVideoViewModel> {
     }()
     
     private var dataSource: UICollectionViewDiffableDataSource<MyVideoSection, MyVideoItem>!
-    private var historyCellRegistration: UICollectionView.CellRegistration<HistoryCardCell,Video>!
-    private var likedVideoCellRegistration: UICollectionView.CellRegistration<VideoCell, Video>!
+    private var historyCellRegistration: UICollectionView.CellRegistration<HistoryCardCell,MyVideoViewModel.HistoryVideoItem>!
+    private var likedVideoCellRegistration: UICollectionView.CellRegistration<VideoCell, MyVideoViewModel.LikedVideoItem>!
     
     private var headerRegistration: UICollectionView.SupplementaryRegistration<SectionHeaderView>!
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         do {
-            try viewModel.fetchMyVideoModel()
+            viewModel.fetchMyVideoViewModel()
         } catch {
             showSnackBar(type: .fetchVideo(false))
         }
@@ -69,29 +69,28 @@ final class MyVideoViewController: BaseViewController<MyVideoViewModel> {
     }
     
     private func setupDataSource() {
-        historyCellRegistration = UICollectionView.CellRegistration<HistoryCardCell, Video> { cell, _, model in
+        historyCellRegistration = UICollectionView.CellRegistration<HistoryCardCell, MyVideoViewModel.HistoryVideoItem> { cell, _, model in
             cell.configureUI(title: model.title, thumbnailImageURL: model.thumbnailURL)
         }
         
-        likedVideoCellRegistration = UICollectionView.CellRegistration<VideoCell, Video> { [weak self] cell, indexPath, item in
-            cell.configure(title: item.title, description: item.descriptionText, isLiked: item.isLiked, thumbnailImageURL: item.thumbnailURL)
+        likedVideoCellRegistration = UICollectionView.CellRegistration<VideoCell, MyVideoViewModel.LikedVideoItem> { [weak self] cell, indexPath, item in
+            cell.configure(title: item.title, description: item.description, isLiked: item.isLiked, thumbnailImageURL: item.thumbnailURL)
             
             cell.onLikeTapped = { [weak self] in
                 guard let self,
-                      let selectedIndexPath = myVideoCollectionView.indexPath(for: cell),
-                      case .like(item) = self.dataSource.itemIdentifier(for: selectedIndexPath),
-                      item.isLiked else { return }
-                do {
-                    try self.viewModel.cancelLike(at: item)
-                    cell.isLiked = !item.isLiked
-                    showSnackBar(type: .updateUnLikedState(true))
-                    
-                    let itemToDelete = MyVideoItem.like(item)
-                    var snapshot = self.dataSource.snapshot()
-                    snapshot.deleteItems([itemToDelete])
-                    self.dataSource.apply(snapshot, animatingDifferences: true)
-                } catch {
-                    showSnackBar(type: .updateUnLikedState(false))
+                      let indexPath = self.myVideoCollectionView.indexPath(for: cell),
+                      case .like(let item) = self.dataSource.itemIdentifier(for: indexPath),
+                      item.isLiked else {
+                    return
+                }
+                
+                Task {
+                    do {
+                        try await self.viewModel.cancelLike(at: item)
+                        self.showSnackBar(type: .updateUnLikedState(true))
+                    } catch {
+                        self.showSnackBar(type: .updateUnLikedState(false))
+                    }
                 }
             }
         }
