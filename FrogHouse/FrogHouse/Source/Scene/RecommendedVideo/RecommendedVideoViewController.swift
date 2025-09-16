@@ -76,12 +76,13 @@ final class RecommendedVideoViewController: BaseViewController<RecommendedVideoV
             .trailing(safeArea.trailingAnchor, offset: 20)
     }
 
-    // MARK: Jay - 데이터 로드 트리거
-    override func viewDidLoad() {
-        super.viewDidLoad()
+    // MARK: Jay - viewDidLoad >> viewWillAppear로 변경
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
         viewModel.load()
-        // MARK: Jay - 목데이터 필요시 생성 (임시코드)
-//        firestoreInsertSampleData()
+        // MARK: Jay - 파이어베이스에 데이터 넣거나 삭제 (임시코드)
+        firestoreInsertSampleData()
+//        firestoreDeleteAllSampleData()
     }
 
     // MARK: Jay - 오토 슬라이드 라이프사이클

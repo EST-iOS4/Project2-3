@@ -26,6 +26,8 @@ struct RecommendedVideoDTO: Codable, FirestoreDomainMappable {
     // MARK: Jay - 생성일(옵션)
     @ServerTimestamp var createdAt: Timestamp?
     // MARK: Jay - 좋아요 여부(옵션)
+    @ServerTimestamp var lastWatchedAt: Timestamp?
+    // MARK: Jay - 좋아요 여부(옵션)
     let isLiked: Bool?
 
     // MARK: Jay - DTO → Domain 변환
