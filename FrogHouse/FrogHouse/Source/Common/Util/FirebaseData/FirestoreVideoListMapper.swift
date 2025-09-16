@@ -49,6 +49,31 @@ enum FirestoreVideoListMapper {
     static func sortByViewCount(_ lhs: FirestoreVideoListDTO, _ rhs: FirestoreVideoListDTO) -> Bool {
         lhs.viewCount > rhs.viewCount
     }
+    
+    static func toHistoryListItem( dto: FirestoreVideoListDTO) -> MyVideoViewModel.HistoryVideoItem? {
+        guard let uuid = UUID(uuidString: dto.id) else { return nil }
+        let thumbnailURL = URL(string: dto.thumbnailURL)
+        let title = dto.title
+        return MyVideoViewModel.HistoryVideoItem(id: uuid,
+                                                 thumbnailURL: thumbnailURL,
+                                                 title: title)
+    }
+    
+    static func toLikedListItem( dto: FirestoreVideoListDTO) -> MyVideoViewModel.LikedVideoItem? {
+        guard let uuid = UUID(uuidString: dto.id) else { return nil }
+        let thumbnailURL = URL(string: dto.thumbnailURL)
+        let title = dto.title
+        let description = dto.description
+        let isLiked = dto.isLiked
+        
+        return MyVideoViewModel.LikedVideoItem(
+            id: uuid,
+            thumbnailURL: thumbnailURL,
+            title: title,
+            description: description,
+            isLiked: isLiked ?? false
+        )
+    }
 }
 
 
