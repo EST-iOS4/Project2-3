@@ -11,7 +11,7 @@ final class NavigationController: UINavigationController {
     override func viewDidLoad() {
         self.navigationBar.prefersLargeTitles = true
         self.navigationBar.isTranslucent = true
-        self.navigationBar.tintColor = UIColor.FH.signatureGreen.color
+        self.navigationBar.tintColor = UIColor.FH.primary.color
         updateTitle(for: topViewController)
         
         delegate = self
