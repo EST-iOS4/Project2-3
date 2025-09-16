@@ -7,10 +7,10 @@
 
 import Foundation
 
-// MARK: Jay - 추천 비디오 VM (BaseViewController와 호환)
+// MARK: Jay - 추천 비디오 VM (Store + Mapper 직접 사용, 레포지토리 없음)
 final class RecommendedVideoViewModel {
 
-    // MARK: Jay - Outputs (UI 업데이트 신호)
+    // MARK: Jay - Outputs
     var onCurrentItemChanged: ((RecommendedVideoModel, Int, Int) -> Void)?
     var onListUpdated: (([RecommendedVideoModel]) -> Void)?
     var onLoadingChanged: ((Bool) -> Void)?
@@ -18,48 +18,52 @@ final class RecommendedVideoViewModel {
 
     // MARK: Jay - Data
     private(set) var items: [RecommendedVideoModel] = []
-    private(set) var currentIndex: Int = 0 {
-        didSet { notifyChange() }
-    }
+    private(set) var currentIndex: Int = 0 { didSet { notifyChange() } }
 
-    // MARK: Jay - 최대 개수
+    // MARK: Jay - 제한
     private let maxCount = 30
 
-    // MARK: Jay - 리포지토리 (도메인 특화 프로토콜)
-    private let repository: any RecommendedVideoRepository
+    // MARK: Jay - Store
+    private let store: FirestoreVideoListStore
 
-    // MARK: Jay - 기본 init (TabBar에서 그대로 사용 가능)
-    init() {
-        // MARK: Jay - 기본 구현체를 Firestore로
-        self.repository = FirestoreRecommendedVideoRepository()
-    }
-
-    // MARK: Jay - 주입 init (테스트/대체 소스용)
-    init(repository: any RecommendedVideoRepository) {
-        self.repository = repository
+    // MARK: Jay - 초기화
+    init(store: FirestoreVideoListStore = .shared) {
+        self.store = store
+        // MARK: Jay - 필요 시 실시간 리스닝 시작 (원치 않으면 주석)
+        // store.startListening(orderBy: "viewCount", descending: true)
     }
 
     // MARK: Jay - 로드
     func load() {
         Task {
-            // MARK: Jay - 로딩 on
             await MainActor.run { onLoadingChanged?(true) }
             do {
-                // MARK: Jay - 데이터 로드
-                let fetched = try await repository.fetchTop(limit: maxCount)
-                // MARK: Jay - UI 업데이트
+                // MARK: Jay - DTO 가져오기 (TTL 고려)
+                let dtos = try await store.getOrFetch(orderBy: "viewCount", descending: true)
+
+                // MARK: Jay - 정렬 (recent → viewCount) 원하면 바꾸기
+                let sorted = dtos.sorted(by: FirestoreVideoListMapper.sortByRecentThenViewCount)
+
+                // MARK: Jay - 매핑 후 상위 N개
+                var models: [RecommendedVideoModel] = []
+                models.reserveCapacity(maxCount)
+                for dto in sorted {
+                    if let m = FirestoreVideoListMapper.toRecommendedVideoModel(dto) {
+                        models.append(m)
+                        if models.count >= maxCount { break }
+                    }
+                }
+
                 await MainActor.run {
-                    self.items = fetched
+                    self.items = models
                     self.currentIndex = min(self.currentIndex, max(0, self.items.count - 1))
                     self.onListUpdated?(self.items)
                     self.onLoadingChanged?(false)
-
                     if self.items.indices.contains(self.currentIndex) {
                         self.onCurrentItemChanged?(self.items[self.currentIndex], self.currentIndex, self.items.count)
                     }
                 }
             } catch {
-                // MARK: Jay - 에러 전달
                 await MainActor.run {
                     self.onLoadingChanged?(false)
                     self.onError?("로드 실패: \(error.localizedDescription)")

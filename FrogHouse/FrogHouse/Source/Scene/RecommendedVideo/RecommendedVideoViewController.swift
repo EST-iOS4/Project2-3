@@ -32,7 +32,7 @@ final class RecommendedVideoViewController: BaseViewController<RecommendedVideoV
         // MARK: Jay - 현재 인덱스 변경 시 UI 반영
         viewModel.onCurrentItemChanged = { [weak self] item, index, total in
             guard let self else { return }
-            self.videoTagsView.setTags(item.tags)
+            self.videoTagsView.setTags(item.categories)
             self.accessibilityLabel = "추천 비디오 \(index + 1)/\(total)"
             self.videoCarouselView.scroll(to: index, animated: true)
         }
@@ -42,7 +42,6 @@ final class RecommendedVideoViewController: BaseViewController<RecommendedVideoV
     override func setupUI() {
         super.setupUI()
         navigationItem.title = "TOP 10 – 오늘 뭐 봐?"
-        navigationController?.navigationBar.tintColor = UIColor.FH.primary.color
         videoCarouselView.backgroundColor = .clear
         videoTagsView.backgroundColor = .clear
         videoCarouselView.onPageChanged = { [weak self] newIndex in

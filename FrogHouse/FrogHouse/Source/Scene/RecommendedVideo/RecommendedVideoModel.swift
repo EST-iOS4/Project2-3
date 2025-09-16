@@ -33,26 +33,22 @@
 //}
 import Foundation
 
-// MARK: Jay - 추천 비디오 Domain 모델 (UI/VM에서 사용)
-struct RecommendedVideoModel: Equatable, Identifiable {
-    // MARK: Jay - 고유 식별자 (UUID)
+// MARK: Jay - 추천 섹션에서 사용할 경량 모델 (Hashable)
+struct RecommendedVideoModel: Hashable {
+    // MARK: Jay - 고유 식별자
     let id: UUID
     // MARK: Jay - 제목
     let title: String
     // MARK: Jay - 상세 설명
     let detail: String
-    // MARK: Jay - 태그 목록
-    let tags: [String]
+    // MARK: Jay - 태그(카테고리 문자열)
+    let categories: [String]
     // MARK: Jay - 썸네일 URL
     let thumbnailURL: URL
 
-    // MARK: Jay - 초기화
-    init(id: UUID, title: String, detail: String, tags: [String], thumbnailURL: URL) {
-        self.id = id
-        self.title = title
-        self.detail = detail
-        self.tags = tags
-        self.thumbnailURL = thumbnailURL
+    // MARK: Jay - 해시 (필요시 필드 추가 가능)
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+        // MARK: Jay - 필요 시 추가 필드 결합 가능
     }
 }
-
