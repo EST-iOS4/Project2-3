@@ -109,7 +109,6 @@ final class VideoListViewController: BaseViewController<VideoListViewModel> {
         viewModel.$videoList
             .receive(on: RunLoop.main)
             .sink { [weak self] videoItems in
-                print("데이터: \(videoItems.map { ($0.title, $0.isLiked) })")
                 self?.emptyView.isHidden = !videoItems.isEmpty
                 self?.applySnapshot(videoItems: videoItems)
                 

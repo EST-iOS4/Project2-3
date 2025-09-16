@@ -96,6 +96,12 @@ final class VideoDetailViewController: BaseViewController<VideoDetailViewModel> 
         return indicator
     }()
     
+    private let likeButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setContentCompressionResistancePriority(.required, for: .horizontal)
+        return button
+    }()
+    
     // MARK: - Gesture
     private lazy var singleTapGesture: UITapGestureRecognizer = {
         let gesture = UITapGestureRecognizer(target: self, action: #selector(didTappedVideoScreen))
@@ -144,6 +150,7 @@ final class VideoDetailViewController: BaseViewController<VideoDetailViewModel> 
         super.setupLayouts()
         view.addSubview(scrollView)
         scrollView.addSubview(containerStackView)
+        containerStackView.addSubview(likeButton)
         [playerContainerView, playerControlsView, titleLabel, descriptionLabel, statisticsLabel, videoTagsView].forEach { containerStackView.addArrangedSubview($0) }
         [feedbackImageView, indicatorView, fullscreenButton].forEach { playerContainerView.addSubview($0) }
     }
@@ -167,6 +174,11 @@ final class VideoDetailViewController: BaseViewController<VideoDetailViewModel> 
             .bottom(playerContainerView.bottomAnchor)
             .trailing(playerContainerView.trailingAnchor)
         indicatorView.pinToSuperview()
+        
+        likeButton.anchor
+            .trailing(playerControlsView.trailingAnchor)
+            .centerY(titleLabel.centerYAnchor)
+            .size(width: 36, height: 36)
         
         containerStackView.setCustomSpacing(25, after: playerControlsView)
         containerStackView.setCustomSpacing(25, after: titleLabel)
@@ -249,11 +261,11 @@ final class VideoDetailViewController: BaseViewController<VideoDetailViewModel> 
                 self?.titleLabel.text = item.title
                 self?.descriptionLabel.text = item.descriptionText
                 self?.videoTagsView.setTags(item.categories.map { $0.title })
+                self?.updateState(item.isLiked)
                 
-                let likeText = item.isLiked ? "❤️" : "♡"
                 let createdDate = item.createdAt.formatted(.dateTime.month().day())
                 let viewText = "조회수: \(item.viewCount)"
-                self?.statisticsLabel.text = "\(likeText) • \(viewText) • 생성일: \(createdDate)"
+                self?.statisticsLabel.text = "\(viewText) • 생성일: \(createdDate)"
             }
             .store(in: &cancellables)
         
@@ -265,6 +277,23 @@ final class VideoDetailViewController: BaseViewController<VideoDetailViewModel> 
             avPlayerVC.showsPlaybackControls = true
             present(avPlayerVC, animated: true)
         }, for: .touchUpInside)
+        
+        likeButton.publisher(for: .touchUpInside)
+            .throttle(for: .milliseconds(500), scheduler: RunLoop.main, latest: false)
+            .sink { [weak self] _ in
+                guard let self else { return }
+                do {
+                    HapticManager.shared.hapticImpact(style: .light)
+                    let updatedState = !(likeButton.currentImage == UIImage(systemName: "heart.fill"))
+                    try self.viewModel.toggleLike(isLiked: updatedState)
+                    self.updateState(updatedState)
+                    self.showSnackBar(type: updatedState ? .updateLikedState(true) : .updateUnLikedState(true) )
+                } catch {
+                    guard let video = self.viewModel.video else { return }
+                    self.showSnackBar(type: video.isLiked ? .updateUnLikedState(false) : .updateLikedState(false) )
+                }
+            }
+            .store(in: &cancellables)
     }
     
     // MARK: - Private
@@ -294,6 +323,14 @@ final class VideoDetailViewController: BaseViewController<VideoDetailViewModel> 
                 self.feedbackImageView.transform = CGAffineTransform(scaleX: 1.2, y: 1.2)
             }, completion: nil)
         }
+    }
+    
+    private func updateState(_ liked: Bool) {
+        let buttonImage = UIImage(systemName: liked ? "heart.fill" : "heart")
+        let buttonColor: UIColor = liked ? UIColor.FH.emphasis.color :  UIColor.FH.primary.color
+
+        likeButton.setImage(buttonImage, for: .normal)
+        likeButton.tintColor = buttonColor
     }
     
     @objc

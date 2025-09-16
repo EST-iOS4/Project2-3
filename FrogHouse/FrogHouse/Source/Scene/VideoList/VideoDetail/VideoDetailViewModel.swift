@@ -67,6 +67,12 @@ final class VideoDetailViewModel: ObservableObject {
         }
     }
     
+    func toggleLike(isLiked: Bool) throws {
+        try PersistenceManager.shared.updateVideo(videoID: id) { video in
+            video.isLiked = isLiked
+        }
+    }
+    
     private func bindManager() {
         playManager.$isPlaying
             .assign(to: &$isPlaying)
