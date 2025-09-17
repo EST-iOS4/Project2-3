@@ -9,7 +9,13 @@
 - iOS 18.5+
 - UIKit
 - Combine
+- Firebase
   </br>
+  
+## 🔔주요 기능 시연 사진
+| 메인 | 카테고리 | 상세 화면 | 전체 화면 | 추천 화면 | 시청 기록 및 좋아요 | 
+| --- | --- | --- | --- | --- | --- | 
+|  <img width="1206" height="2622" alt="image" src="https://github.com/user-attachments/assets/bb5b16c4-e552-4cd5-9778-f61bbefd8345" /> |  <img width="1206" height="2622" alt="image" src="https://github.com/user-attachments/assets/5c68addf-caa7-4381-bde7-525e1ec78a13" /> |  <img width="1206" height="2622" alt="simulator_screenshot_E4CDA2E4-AD1D-4B19-8455-58F1697D8346" src="https://github.com/user-attachments/assets/6c0333a4-18e9-4f76-98bd-2f01c5bad043" /> | <img width="1206" height="2622" alt="image" src="https://github.com/user-attachments/assets/cf5a0f7c-e4a9-4e59-a048-e38564ea6c68" /> | <img width="1206" height="2622" alt="image" src="https://github.com/user-attachments/assets/a17522f2-bbaf-48f8-9d18-8ab65ab41274" /> | <img width="1206" height="2622" alt="image" src="https://github.com/user-attachments/assets/652a1bc4-a338-499e-9894-37765cac11db" /> | <img width="1206" height="2622" alt="image" src="https://github.com/user-attachments/assets/ef697417-afe6-49d9-b8a7-df8f120fbf59" />
 
 ## Code Convention
 
