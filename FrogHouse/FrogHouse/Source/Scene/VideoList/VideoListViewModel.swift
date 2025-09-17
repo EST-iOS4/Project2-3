@@ -26,7 +26,6 @@ final class VideoListViewModel {
         if isLoading { return }
         isLoading = true
         defer { isLoading = false }
-        
         let dtos = try await FirestoreVideoListStore.shared.loadFirestoreData(type: .createdAtDesc)
         let all: [VideoListItem] = dtos.compactMap {
             FirestoreVideoListMapper.toVideoListItem($0)

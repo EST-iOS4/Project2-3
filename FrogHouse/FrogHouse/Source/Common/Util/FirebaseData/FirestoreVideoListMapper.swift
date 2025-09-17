@@ -7,15 +7,12 @@
 
 import Foundation
 
-// MARK: Jay - 공용 Mapper (DTO → 각 도메인 모델)
 enum FirestoreVideoListMapper {
     
-    // MARK: Jay - 문자열 → VideoCategory
     private static func stringToCategory(_ str: String) -> VideoCategory {
         VideoCategory(rawValue: str) ?? .unknown
     }
     
-    // MARK: Jay - DTO → toRecommendedVideoItem
     static func toRecommendedVideoItem(_ dto: FirestoreVideoListDTO) -> RecommendedVideoItem? {
         guard let uuid = UUID(uuidString: dto.id) else { return nil }
         guard let thumb = URL(string: dto.thumbnailURL) else { return nil }
@@ -29,8 +26,6 @@ enum FirestoreVideoListMapper {
         )
     }
     
-    
-    // MARK: Jay - DTO → VideoListItem
     static func toVideoListItem(_ dto: FirestoreVideoListDTO) -> VideoListItem? {
         guard let uuid = UUID(uuidString: dto.id) else { return nil }
         let thumb = URL(string: dto.thumbnailURL)
@@ -45,7 +40,6 @@ enum FirestoreVideoListMapper {
         )
     }
     
-    // MARK: Jay - 순수 viewCount 기준 정렬
     static func sortByViewCount(_ lhs: FirestoreVideoListDTO, _ rhs: FirestoreVideoListDTO) -> Bool {
         lhs.viewCount > rhs.viewCount
     }
@@ -76,8 +70,6 @@ enum FirestoreVideoListMapper {
     }
 }
 
-
-// MARK: Jay - DTO → VideoDetailItem
 extension FirestoreVideoListMapper {
     static func toVideoDetailItem(_ dto: FirestoreVideoListDTO) -> VideoDetailViewModel.VideoDetailItem? {
         let categories: [VideoCategory] = dto.categories.map { VideoCategory(rawValue: $0) ?? .unknown }

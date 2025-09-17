@@ -12,53 +12,39 @@ protocol RecommendedVideoCarouselViewDelegate: AnyObject {
 }
 
 struct RecommendedCarouselItem: Hashable {
-    // MARK: Jay - 데이터
     let videoThumbnailURL: URL
     let videoTitle: String?
     let videoDetail: String?
 }
 
-// MARK: Jay - 캐러셀 뷰 (스와이프, 오토슬라이드, 아이템 터치시 VC로 전달)
 final class RecommendedVideoCarouselView: UIView, UICollectionViewDelegate, UICollectionViewDataSourcePrefetching {
-    
-    // MARK: Jay - 탭 이벤트를 RecommendedVideoViewController 에게 전달
     weak var delegate: RecommendedVideoCarouselViewDelegate?
-    
-    // MARK: Jay - Outputs
     var onPageChanged: ((Int) -> Void)?
-    
-    // MARK: Jay - Data
-    private var baseItems: [RecommendedCarouselItem] = []   // MARK: Jay - 원본 아이템
+    private var baseItems: [RecommendedCarouselItem] = []
     private var baseCount: Int { baseItems.count }
-    private let repeatFactor: Int = 3                       // MARK: Jay - 무한 캐러셀용 3배 확장
-    
-    // Diffable 구성용 섹션/아이템
+    private let repeatFactor: Int = 3
     private enum Section { case main }
-    // MARK: Jay - 스냅샷 중복 방지를 위한 가상 아이템(실인덱스를 들고 있음)
     private struct VirtualItem: Hashable {
         let id = UUID()
         let realIndex: Int
     }
     
-    private var virtualItems: [VirtualItem] = []            // MARK: Jay - 3배 확장된 가상 아이템 목록
+    private var virtualItems: [VirtualItem] = []
     private var totalItems: Int { virtualItems.count }
     
-    // MARK: Jay - Index
-    private var currentVirtualIndex: Int = 0                // MARK: Jay - 가상 인덱스(0..<totalItems)
-    private var currentRealIndex: Int {                     // MARK: Jay - 실인덱스(0..<baseCount)
+    private var currentVirtualIndex: Int = 0
+    private var currentRealIndex: Int {
         guard baseCount > 0, totalItems > 0 else { return 0 }
         return virtualItems[currentVirtualIndex].realIndex
     }
-    private var middleBlockStart: Int {                     // MARK: Jay - 가운데 블록 시작 인덱스
+    private var middleBlockStart: Int {
         return baseCount
     }
     
-    // MARK: Jay - 오토슬라이드 3.0초 마다
     private var autoTimer: Timer?
     private var resumeWorkItem: DispatchWorkItem?
     private var autoInterval: TimeInterval = 3.0
     
-    // MARK: Jay - Layout
     private let layout: UICollectionViewFlowLayout = {
         let l = UICollectionViewFlowLayout()
         l.scrollDirection = .horizontal
@@ -67,7 +53,6 @@ final class RecommendedVideoCarouselView: UIView, UICollectionViewDelegate, UICo
         return l
     }()
     
-    // MARK: Jay - UI
     private lazy var collectionView: UICollectionView = {
         let cv = UICollectionView(frame: .zero, collectionViewLayout: layout)
         cv.backgroundColor = .clear
@@ -77,7 +62,7 @@ final class RecommendedVideoCarouselView: UIView, UICollectionViewDelegate, UICo
         cv.register(RecommendedVideoCarouselCell.self,
                     forCellWithReuseIdentifier: RecommendedVideoCarouselCell.reuseID)
         cv.delegate = self
-        cv.prefetchDataSource = self // MARK: Jay - 프리페치 등록
+        cv.prefetchDataSource = self
         return cv
     }()
     
@@ -85,16 +70,12 @@ final class RecommendedVideoCarouselView: UIView, UICollectionViewDelegate, UICo
     private typealias DataSource = UICollectionViewDiffableDataSource<Section, VirtualItem>
     private typealias Snapshot = NSDiffableDataSourceSnapshot<Section, VirtualItem>
     private var dataSource: DataSource!
-    
-    // MARK: Jay - Init
+
     override init(frame: CGRect) {
         super.init(frame: frame)
         addSubview(collectionView)
         
-        // MARK: Jay - Constraints (AnchorWrapper 적용)
         collectionView.pinToSuperview()
-        
-        // Diffable DataSource 구성 (셀 제공자)
         dataSource = DataSource(collectionView: collectionView) { [weak self] collectionView, indexPath, vItem in
             guard
                 let self = self,
@@ -116,62 +97,41 @@ final class RecommendedVideoCarouselView: UIView, UICollectionViewDelegate, UICo
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
     
     deinit {
-        // MARK: Jay - 타이머/워크아이템 정리
         autoTimer?.invalidate()
         resumeWorkItem?.cancel()
     }
-    
-    // MARK: Jay - LayoutSubviews (셀 크기 조정)
+
     override func layoutSubviews() {
         super.layoutSubviews()
         let itemSize = CGSize(width: bounds.width, height: bounds.height)
         if layout.itemSize != itemSize {
             layout.itemSize = itemSize
             layout.invalidateLayout()
-            // MARK: Jay - 크기 변경 시 현재 가상 인덱스로 재정렬 (무한 캐러셀)
             syncScroll(toVirtual: currentVirtualIndex, animated: false)
         }
     }
 
-    // MARK: Jay - Public API
     func setItems(_ items: [RecommendedCarouselItem]) {
         self.baseItems = items
-        
-        // MARK: Jay - 가상 아이템 재구성 (아이템이 0/1개면 그대로, 2개 이상이면 3배 확장)
         rebuildVirtualItems()
-        
-        // 스냅샷 적용
         applySnapshot(animating: false)
-        
         guard baseCount > 0 else { return }
-        
-        // 레이아웃 보장 후 스크롤
         collectionView.layoutIfNeeded()
-        
-        // MARK: Jay - 가운데 블록에서 시작 (무한 캐러셀)
         currentVirtualIndex = min(middleBlockStart, max(0, totalItems - 1))
         syncScroll(toVirtual: currentVirtualIndex, animated: false)
-        
-        // MARK: Jay - 첫 페이지 알림
         onPageChanged?(currentRealIndex)
-        
-        // MARK: Jay - 초기 프리페치 (무한 캐러셀 + 프리페치)
         prefetchAround(virtualIndex: currentVirtualIndex)
     }
     
     func scroll(to index: Int, animated: Bool) {
         guard baseCount > 0, (0..<baseCount).contains(index) else { return }
-        // MARK: Jay - 외부에서 실인덱스를 주면 가운데 블록의 동일 위치로 스크롤 (무한 캐러셀)
         let targetVirtual = (baseCount <= 1) ? index : (middleBlockStart + index)
         currentVirtualIndex = targetVirtual
         syncScroll(toVirtual: targetVirtual, animated: animated)
         if !animated { onPageChanged?(currentRealIndex) }
-        
-        // MARK: Jay - 수동 스크롤 시에도 프리페치
         prefetchAround(virtualIndex: currentVirtualIndex)
     }
     
-    // MARK: Jay - Auto Scroll Controls
     func startAutoScroll(interval: TimeInterval = 3.0) {
         autoInterval = interval
         stopAutoScroll()
@@ -188,18 +148,14 @@ final class RecommendedVideoCarouselView: UIView, UICollectionViewDelegate, UICo
     }
     
     private func autoTick() {
-        // MARK: Jay - 사용자 제스처/감속 중이면 스킵
         guard !collectionView.isDragging, !collectionView.isDecelerating else { return }
         guard baseCount > 1 else { return }
         let nextVirtual = currentVirtualIndex + 1
         currentVirtualIndex = min(nextVirtual, max(0, totalItems - 1))
         syncScroll(toVirtual: nextVirtual, animated: true)
-        
-        // MARK: Jay - 자동 스크롤 시 프리페치
         prefetchAround(virtualIndex: nextVirtual)
     }
     
-    // MARK: Jay - Resume Scheduling
     private func scheduleAutoResume(after delay: TimeInterval = 0.5) {
         // 기존 예약 취소 후 새로 예약 (디바운스)
         resumeWorkItem?.cancel()
@@ -212,7 +168,6 @@ final class RecommendedVideoCarouselView: UIView, UICollectionViewDelegate, UICo
         DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: work)
     }
     
-    // MARK: Jay - Helpers
     private func pageWidth() -> CGFloat { max(1, collectionView.bounds.width) }
     private func currentPage() -> Int {
         let x = collectionView.contentOffset.x
@@ -220,28 +175,21 @@ final class RecommendedVideoCarouselView: UIView, UICollectionViewDelegate, UICo
         return max(0, min(p, max(0, totalItems - 1)))
     }
     
-    // MARK: Jay - 가상 스크롤 동기화 + 경계 재중앙화 (무한 캐러셀)
     private func syncScroll(toVirtual vIndex: Int, animated: Bool) {
         guard totalItems > 0 else { return }
-        
-        // 레이아웃 보장
         collectionView.layoutIfNeeded()
-        
         let clamped = max(0, min(vIndex, totalItems - 1))
         let indexPath = IndexPath(item: clamped, section: 0)
         collectionView.scrollToItem(at: indexPath, at: .centeredHorizontally, animated: animated)
-        
         if !animated {
             recenterIfNeeded(aroundVirtual: clamped)
         }
     }
     
-    // MARK: Jay - 가장자리 진입 시 가운데 블록으로 재중앙화 (무한 캐러셀)
     private func recenterIfNeeded(aroundVirtual vIndex: Int? = nil) {
         guard baseCount > 0, totalItems >= baseCount * 3 else { return }
         let v = vIndex ?? currentPage()
         let real = virtualItems[v].realIndex
-        
         if v < baseCount || v >= baseCount * 2 {
             let middle = middleBlockStart + real
             currentVirtualIndex = middle
@@ -250,7 +198,6 @@ final class RecommendedVideoCarouselView: UIView, UICollectionViewDelegate, UICo
         }
     }
     
-    // MARK: Jay - 프리페치 유틸 (무한 캐러셀 + 프리페치)
     private func prefetchAround(virtualIndex: Int) {
         guard baseCount > 0, totalItems > 0 else { return }
         let candidates = [
@@ -265,26 +212,19 @@ final class RecommendedVideoCarouselView: UIView, UICollectionViewDelegate, UICo
         RecommendedVideoImageLoader.shared.prefetch(urls: urls)
     }
     
-    // MARK: Jay - Diffable helpers
     private func rebuildVirtualItems() {
         virtualItems.removeAll()
-        
         guard baseCount > 0 else { return }
-        
         if baseCount == 1 {
-            // 1개일 때는 그대로 1개
             virtualItems = [VirtualItem(realIndex: 0)]
             return
         }
-        
-        // 2개 이상이면 3배 확장 (0..<(baseCount*repeatFactor))
         var tmp: [VirtualItem] = []
         for _ in 0..<repeatFactor {
             for real in 0..<baseCount {
                 tmp.append(VirtualItem(realIndex: real))
             }
         }
-        virtualItems = tmp
     }
     
     private func applySnapshot(animating: Bool) {
@@ -295,7 +235,6 @@ final class RecommendedVideoCarouselView: UIView, UICollectionViewDelegate, UICo
     }
 }
 
-// MARK: - Prefetching (무한 캐러셀 + 프리페치)
 extension RecommendedVideoCarouselView {
     func collectionView(_ collectionView: UICollectionView, prefetchItemsAt indexPaths: [IndexPath]) {
         guard baseCount > 0, !indexPaths.isEmpty else { return }
@@ -308,20 +247,16 @@ extension RecommendedVideoCarouselView {
     }
     
     func collectionView(_ collectionView: UICollectionView, cancelPrefetchingForItemsAt indexPaths: [IndexPath]) {
-        // MARK: Jay - 단순 캐시이므로 취소 로직 없음 (필요 시 구현 가능)
     }
 }
 
-// MARK: - Delegate (페이징 콜백 + 자동스크롤 일시정지/재개 + 무한 캐러셀 재중앙화)
 extension RecommendedVideoCarouselView {
     func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
-        // MARK: Jay - 사용자 스와이프 시작 → 즉시 일시정지
         stopAutoScroll()
         resumeWorkItem?.cancel()
     }
     
     func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
-        // MARK: Jay - 감속 종료 → 페이지 확정 + 재중앙화 + 0.5초 후 재개
         let v = currentPage()
         currentVirtualIndex = v
         recenterIfNeeded(aroundVirtual: v)
@@ -330,7 +265,6 @@ extension RecommendedVideoCarouselView {
     }
     
     func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
-        // MARK: Jay - 드래그 종료 (감속 여부에 따라 처리)
         if !decelerate {
             let v = currentPage()
             currentVirtualIndex = v
@@ -341,7 +275,6 @@ extension RecommendedVideoCarouselView {
     }
     
     func scrollViewDidEndScrollingAnimation(_ scrollView: UIScrollView) {
-        // MARK: Jay - 자동 스크롤 애니메이션 종료 시 현재 페이지 확정 + 무한 캐러셀 재중앙화
         let v = currentPage()
         currentVirtualIndex = v
         recenterIfNeeded(aroundVirtual: v)

@@ -46,15 +46,16 @@ extension UIColor {
         /// Emphasis – 강조 컬러red (좋아요/하트/에러)
         case emphasis
 
-        /// BackgroundPlain – 기본 배경색 (라이트: 흰색 / 다크: 검정)
+        /// BackgroundBase – 기본 배경색 (라이트: 흰색 / 다크: 검정)
         case backgroundBase
 
-        /// BackgroundPlain – 미색 배경색 (라이트: 흰색 / 다크: 검정)
+        /// BackgroundNeutral – 미색 배경색 (라이트: 흰색 / 다크: 검정)
         case backgroundNeutral
 
-        /// BackgroundFrog – 색들어간 서브 배경 (라이트: 밝은 메론 / 다크: 짙은 메론)
-        /// 카드, 섹션 구분, 특수 영역 배경 등
+        /// BackgroundLightGreen – 색들어간 서브 배경, 카드/섹션 구분/특수 영역 배경 등 (라이트: 밝은 메론 / 다크: 짙은 메론)
+        ///
         case backgroundLightGreen
+        
 var light: UIColor {
             switch self {
             case .primary: return UIColor(hex: "#000000") ?? .systemBackground
@@ -83,18 +84,14 @@ var dark: UIColor {
         }
     }
 }
-// MARK: - HEX 지원 Extension
+
 extension UIColor {
-    /// HEX 문자열 (#RRGGBB 또는 #RRGGBBAA)로 UIColor 생성
     convenience init?(hex: String) {
         var hexSanitized = hex.trimmingCharacters(in: .whitespacesAndNewlines)
         hexSanitized = hexSanitized.replacingOccurrences(of: "#", with: "")
-        
         var rgb: UInt64 = 0
         let length = hexSanitized.count
-        
         guard Scanner(string: hexSanitized).scanHexInt64(&rgb) else { return nil }
-        
         var r, g, b, a: CGFloat
         if length == 6 {
             r = CGFloat((rgb & 0xFF0000) >> 16) / 255.0
@@ -109,7 +106,6 @@ extension UIColor {
         } else {
             return nil
         }
-        
         self.init(red: r, green: g, blue: b, alpha: a)
     }
 }

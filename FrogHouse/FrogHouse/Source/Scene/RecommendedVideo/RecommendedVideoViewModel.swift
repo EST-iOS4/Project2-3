@@ -7,32 +7,18 @@
 
 import Foundation
 
-// MARK: Jay - 추천 비디오 VM (Store + Mapper 직접 사용, 레포지토리 없음)
 final class RecommendedVideoViewModel {
-
-    // MARK: Jay - Outputs
     var onCurrentItemChanged: ((RecommendedVideoItem, Int, Int) -> Void)?
     var onListUpdated: (([RecommendedVideoItem]) -> Void)?
     var onLoadingChanged: ((Bool) -> Void)?
     var onError: ((String) -> Void)?
-
-    // MARK: Jay - Data
     private(set) var items: [RecommendedVideoItem] = []
     private(set) var currentIndex: Int = 0 { didSet { notifyChange() } }
-
-    // MARK: Jay - 제한
     private let maxCount = 30
-
-    // MARK: Jay - Store
     private let store: FirestoreVideoListStore
-
-    // MARK: Jay - 초기화
     init(store: FirestoreVideoListStore = .shared) {
         self.store = store
-        // MARK: Jay - 필요 시 실시간 리스닝 (원치 않으면 주석 처리)
     }
-
-    // MARK: Jay - 로드 (캐시 우선, TTL 지나면 자동 갱신)
     func load() {
         Task {
             await MainActor.run { onLoadingChanged?(true) }
@@ -59,19 +45,16 @@ final class RecommendedVideoViewModel {
         }
     }
 
-    // MARK: Jay - Index 제어
     func setCurrentIndex(_ index: Int) {
         guard items.indices.contains(index), currentIndex != index else { return }
         currentIndex = index
     }
-
-    // MARK: Jay - 아이템 접근
+    
     func item(at index: Int) -> RecommendedVideoItem? {
         guard items.indices.contains(index) else { return nil }
         return items[index]
     }
-
-    // MARK: Jay - 변화감지 알림
+    
     private func notifyChange() {
         guard items.indices.contains(currentIndex) else { return }
         onCurrentItemChanged?(items[currentIndex], currentIndex, items.count)

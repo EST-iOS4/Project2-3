@@ -28,22 +28,17 @@ final class MyVideoViewModel {
     
     func fetchMyVideoViewModel() async throws {
         let dtos = try await FirestoreVideoListStore.shared.loadFirestoreData(type: .lastWatchedAtDesc)
-        
         let history: [MyVideoViewModel.HistoryVideoItem] = dtos
-//            .filter { $0.lastWatchedAt != nil }
             .compactMap { FirestoreVideoListMapper.toHistoryListItem(dto: $0) }
-        
         let liked: [MyVideoViewModel.LikedVideoItem] = dtos
-            .filter { $0.isLiked == true } // 좋아요 누른 영상만
+            .filter { $0.isLiked == true }
             .compactMap { FirestoreVideoListMapper.toLikedListItem(dto: $0) }
-
         self.historyVideoModel = Array(history.prefix(5))
         self.likedVideoModel = liked
     }
     
     func cancelLike(at item: LikedVideoItem) async throws {
         try await FirestoreCRUDHelper.updateIsLiked(id: item.id, isLiked: false)
-        
         await MainActor.run {
             likedVideoModel.removeAll { $0.id == item.id }
         }

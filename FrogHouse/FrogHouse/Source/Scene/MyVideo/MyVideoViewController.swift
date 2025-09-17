@@ -146,7 +146,6 @@ final class MyVideoViewController: BaseViewController<MyVideoViewModel> {
         dataSource.apply(snapshot, animatingDifferences: true)
     }
     
-    // MARK: - Compositional Layout
     private func makeLayout() -> UICollectionViewCompositionalLayout {
         UICollectionViewCompositionalLayout { [weak self] sectionIndex, env in
             guard let section = MyVideoSection(rawValue: sectionIndex) else { return nil }

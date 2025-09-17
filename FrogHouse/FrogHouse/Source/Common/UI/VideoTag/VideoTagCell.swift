@@ -7,7 +7,6 @@
 
 import UIKit
 
-// MARK: Jay - 태그 셀
 final class VideoTagCell: UICollectionViewCell {
     static let reuseID = String(describing: VideoTagCell.self)
     
