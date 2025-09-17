@@ -1,7 +1,8 @@
 # FrogHouse
 
+<img width="800" height="600" alt="FrogHouseMockUp" src="https://github.com/user-attachments/assets/d9754e1e-43db-4255-a962-1ce9f778090b" />
+
 🌟 이스트소프트 4회차 2차 프로젝트 iOS 3팀
-</br>
 </br>
 
 ## Tech Stack
