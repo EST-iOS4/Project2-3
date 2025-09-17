@@ -225,6 +225,7 @@ final class RecommendedVideoCarouselView: UIView, UICollectionViewDelegate, UICo
                 tmp.append(VirtualItem(realIndex: real))
             }
         }
+        virtualItems = tmp
     }
     
     private func applySnapshot(animating: Bool) {
