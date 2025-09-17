@@ -9,8 +9,9 @@ import UIKit
 
 final class NavigationController: UINavigationController {
     override func viewDidLoad() {
-        self.navigationBar.prefersLargeTitles = false
+        self.navigationBar.prefersLargeTitles = true
         self.navigationBar.isTranslucent = true
+        self.navigationBar.tintColor = UIColor.FH.primary.color
         updateTitle(for: topViewController)
         
         delegate = self
@@ -19,7 +20,7 @@ final class NavigationController: UINavigationController {
     
     private func updateTitle(for viewController: UIViewController?) {
         guard let vc = viewController else { return }
-        vc.navigationItem.title = vc.title
+        vc.navigationItem.title = vc.navigationItem.title
     }
 }
 
@@ -30,6 +31,13 @@ extension NavigationController: UINavigationControllerDelegate {
         animated: Bool
     ) {
         updateTitle(for: viewController)
+    }
+    
+    override func pushViewController(_ viewController: UIViewController, animated: Bool) {
+        if viewControllers.count > 0 {
+            viewController.hidesBottomBarWhenPushed = true
+        }
+        super.pushViewController(viewController, animated: animated)
     }
 }
 

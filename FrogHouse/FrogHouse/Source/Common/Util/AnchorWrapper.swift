@@ -46,8 +46,8 @@ final class AnchorWrapper {
     }
     
     @discardableResult
-    func centerY(_ anchor: NSLayoutYAxisAnchor) -> Self {
-        view.centerYAnchor.constraint(equalTo: anchor).isActive = true
+    func centerY(_ anchor: NSLayoutYAxisAnchor, offset: CGFloat = 0) -> Self {
+        view.centerYAnchor.constraint(equalTo: anchor, constant: offset).isActive = true
         return self
     }
     
