@@ -59,6 +59,7 @@ final class VideoDetailViewModel: ObservableObject {
             defer { isLoading = false }
             if let dto = try await FirestoreVideoListStore.shared.getDto(for: id),
                let detail = FirestoreVideoListMapper.toVideoDetailItem(dto) {
+                try await FirestoreCRUDHelper.updateLastWatchedAt(id: id)
                 if let mp4 = URL(string: dto.mp4URL) {
                     self.playManager.loadVideo(url: mp4)
                 }

@@ -33,7 +33,7 @@ actor FirestoreVideoListStore {
     // MARK: Jay - Firestore에서 강제 갱신
     func loadFirestoreData(type: VideoListSort) async throws -> [FirestoreVideoListDTO] {
         let snap = try await collection
-            .limit(to: 200).order(by: type.sortBy, descending: false)
+            .limit(to: 200).order(by: type.sortBy, descending: true)
             .getDocuments()
 
         let next: [FirestoreVideoListDTO] = snap.documents.compactMap {

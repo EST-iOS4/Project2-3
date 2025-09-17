@@ -11,7 +11,7 @@ final class MyVideoHistoryAllViewController: BaseViewController<MyVideoHistoryAl
     enum Section: Int, Hashable {
         case main
     }
-    private var dataSource: UICollectionViewDiffableDataSource<Section, MyVideoHistoryAllViewModel.VideoListAllItem>!
+    private var dataSource: UICollectionViewDiffableDataSource<Section, VideoListItem>!
     
     private let emptyView = EmptyView(state: .noVideo)
     
@@ -74,7 +74,7 @@ final class MyVideoHistoryAllViewController: BaseViewController<MyVideoHistoryAl
 // MARK: - Setup DataSource
 extension MyVideoHistoryAllViewController {
     private func setupDataSource() {
-        dataSource = UICollectionViewDiffableDataSource<Section, MyVideoHistoryAllViewModel.VideoListAllItem>(collectionView: videoCollectionView) { collectionView, indexPath, videoItem in
+        dataSource = UICollectionViewDiffableDataSource<Section, VideoListItem>(collectionView: videoCollectionView) { collectionView, indexPath, videoItem in
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: VideoCell.reuseIdentifier, for: indexPath) as? VideoCell ?? VideoCell()
             cell.configure(
                 title: videoItem.title,
@@ -104,8 +104,8 @@ extension MyVideoHistoryAllViewController {
         }
     }
     
-    func applySnapshot(videoItems: [MyVideoHistoryAllViewModel.VideoListAllItem]) {
-        var snapshot = NSDiffableDataSourceSnapshot<Section, MyVideoHistoryAllViewModel.VideoListAllItem>()
+    func applySnapshot(videoItems: [VideoListItem]) {
+        var snapshot = NSDiffableDataSourceSnapshot<Section, VideoListItem>()
         snapshot.appendSections([.main])
         snapshot.appendItems(videoItems)
         dataSource.apply(snapshot, animatingDifferences: true)

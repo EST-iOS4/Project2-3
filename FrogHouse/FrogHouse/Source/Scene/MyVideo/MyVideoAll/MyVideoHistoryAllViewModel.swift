@@ -9,21 +9,21 @@ import Combine
 import Foundation
 
 final class MyVideoHistoryAllViewModel {
-    struct VideoListAllItem: Hashable {
-        let id: UUID
-        let thumbnailURL: URL?
-        let title: String
-        let descriptionText: String
-        var isLiked: Bool
-        let categories: [VideoCategory]
-        let viewCount: Int
-
-        func hash(into hasher: inout Hasher) {
-            hasher.combine(id)
-            hasher.combine(isLiked)
-        }
-    }
-    @Published private(set) var videoList: [VideoListAllItem] = []
+//    struct VideoListAllItem: Hashable {
+//        let id: UUID
+//        let thumbnailURL: URL?
+//        let title: String
+//        let descriptionText: String
+//        var isLiked: Bool
+//        let categories: [VideoCategory]
+//        let viewCount: Int
+//
+//        func hash(into hasher: inout Hasher) {
+//            hasher.combine(id)
+//            hasher.combine(isLiked)
+//        }
+//    }
+    @Published private(set) var videoList: [VideoListItem] = []
     
 //    func fetchVideoList() throws {
 //        let request = Video.fetchRequest()
@@ -43,9 +43,10 @@ final class MyVideoHistoryAllViewModel {
 //        videoList[selectedIndex].isLiked = updatedVideoState
 //    }
     func fetchVideoList() async throws {
-//        let dtos = try await FirestoreVideoListStore.shared.loadFirestoreData()
-//        let all: [VideoListAllItem] = dtos.compactMap { FirestoreVideoListMapper.toVideoListAllItem($0) }
-//        self.videoList = all.filter { $0.viewCount > 0 }
+        let dtos = try await FirestoreVideoListStore.shared.loadFirestoreData(type: .lastWatchedAtDesc)
+        let all: [VideoListItem] = dtos.filter { $0.lastWatchedAt != nil }
+            .compactMap { FirestoreVideoListMapper.toVideoListItem($0) }
+        self.videoList = all
     }
     
     func toggleLike(id: UUID, isLiked: Bool) {

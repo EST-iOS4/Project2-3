@@ -27,10 +27,10 @@ final class MyVideoViewModel {
     @Published private(set) var likedVideoModel: [LikedVideoItem] = []
     
     func fetchMyVideoViewModel() async throws {
-        let dtos = try await FirestoreVideoListStore.shared.loadFirestoreData(type: .viewCountDesc)
+        let dtos = try await FirestoreVideoListStore.shared.loadFirestoreData(type: .lastWatchedAtDesc)
         
         let history: [MyVideoViewModel.HistoryVideoItem] = dtos
-            .filter { $0.lastWatchedAt != nil }
+//            .filter { $0.lastWatchedAt != nil }
             .compactMap { FirestoreVideoListMapper.toHistoryListItem(dto: $0) }
         
         let liked: [MyVideoViewModel.LikedVideoItem] = dtos

@@ -18,6 +18,13 @@ enum FirestoreCRUDHelper {
             .updateData(["isLiked": isLiked])
     }
     
+    static func updateLastWatchedAt(id: UUID) async throws {
+        try await Firestore.firestore()
+            .collection("VideoList")
+            .document(id.uuidString)
+            .updateData(["lastWatchedAt": Date()])
+    }
+    
     // MARK: Jay - Firestore문서들을 한번에 삭제하는 함수
     func deleteAllSampleData() {
         print("🚨 deleteAllVideos called")
